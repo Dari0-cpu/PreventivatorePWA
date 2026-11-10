@@ -139,3 +139,13 @@ export function clientLabel(client) {
 export function clientSubLabel(client) {
   return formatClientAddress(client) || client.tax_id || '';
 }
+
+/** Mantenuta per compatibilità con useQuote.js */
+export function createEmptyLine() {
+  return {
+    id: makeId('line'),
+    description: '',
+    quantity: 1,
+    unit_price: '',
+  };
+}
