@@ -1,3 +1,17 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+html {
+  color-scheme: dark;
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+}
+
+/* L'area di stampa esiste sempre nel DOM ma si vede solo in stampa. */
+.print-area {
+  display: none;
+}

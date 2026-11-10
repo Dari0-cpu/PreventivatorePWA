@@ -7,9 +7,9 @@ app = FastAPI(
     description="Backend per Preventivatore Offline-First"
 )
 
-@app.get("/api/v1/quotes")
+@app.get ("/api/v1/quotes")
 def get_quotes():
-    return {"message": "Ritorna la lista dei preventivi (Da collegare a Supabase)"}
+   return {"message": "Ritorna la lista dei preventivi (Da collegare a Supabase)"}
 
 @app.get("/api/v1/quotes/{quote_id}")
 def get_quote(quote_id: str):

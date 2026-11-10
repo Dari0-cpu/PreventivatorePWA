@@ -1,13 +1,10 @@
-import React from 'react'
-import QuoteBuilder from './QuoteBuilder'
+import React from 'react';
+import QuoteBuilder from './quote/QuoteBuilder';
 
-function App() {
+export default function App() {
   return (
-    // Il div root dell'app
-    <div className="antialiased text-gray-900 font-sans selection:bg-blue-200">
+    <div className="tp-shell">
       <QuoteBuilder />
     </div>
-  )
+  );
 }
-
-export default App
