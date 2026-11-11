@@ -28,7 +28,7 @@ export function DocumentMeta({ quote, onChange }) {
         <div className="field">
           <span className="field-label">Riepilogo</span>
           <div className="small muted" style={{ paddingTop: 10 }}>
-            {quote.sections.length} sezioni · {quote.sections.reduce((sum, section) => sum + section.lines.length, 0)} voci
+            {quote.sections.length} {quote.sections.length === 1 ? 'sezione' : 'sezioni'}
           </div>
         </div>
       </div>
