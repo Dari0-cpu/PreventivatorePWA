@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
 import html2pdf from 'html2pdf.js';
 import { useQuote } from './useQuote';
 import { IssuerPanel } from './IssuerPanel';
@@ -15,11 +15,75 @@ import {
   saveQuoteToArchive,
   deleteQuoteFromArchive,
   exportQuoteToFile,
-  getNextQuoteNumber,
+  fetchNextQuoteNumber,
   makeId,
 } from './quoteModel';
-import { todayIso, formatDate } from '../lib/format';
+import { todayIso, formatDate, formatCurrency } from '../lib/format';
+import { computeQuoteTotals } from '../lib/totals';
 
+/* Icone SVG minimali (niente emoji, zero dipendenze esterne) */
+const IconFile = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+    <polyline points="14 2 14 8 20 8" />
+    <line x1="16" y1="13" x2="8" y2="13" />
+    <line x1="16" y1="17" x2="8" y2="17" />
+  </svg>
+);
+
+const IconArchive = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <polyline points="21 8 21 21 3 21 3 8" />
+    <rect x="1" y="3" width="22" height="5" />
+    <line x1="10" y1="12" x2="14" y2="12" />
+  </svg>
+);
+
+const IconPlus = () => (
+  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+    <line x1="12" y1="5" x2="12" y2="19" />
+    <line x1="5" y1="12" x2="19" y2="12" />
+  </svg>
+);
+
+const IconSave = () => (
+  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" />
+    <polyline points="17 21 17 13 7 13 7 21" />
+    <polyline points="7 3 7 8 15 8" />
+  </svg>
+);
+
+const IconDownload = () => (
+  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+    <polyline points="7 10 12 15 17 10" />
+    <line x1="12" y1="15" x2="12" y2="3" />
+  </svg>
+);
+
+const IconPrinter = () => (
+  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <polyline points="6 9 6 2 18 2 18 9" />
+    <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" />
+    <rect x="6" y="14" width="12" height="8" />
+  </svg>
+);
+
+const IconSearch = () => (
+  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <circle cx="11" cy="11" r="8" />
+    <line x1="21" y1="21" x2="16.65" y2="16.65" />
+  </svg>
+);
+
+const IconMenu = () => (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <line x1="3" y1="6" x2="21" y2="6" />
+    <line x1="3" y1="12" x2="21" y2="12" />
+    <line x1="3" y1="18" x2="21" y2="18" />
+  </svg>
+);
 
 export default function QuoteBuilder() {
   const {
@@ -44,22 +108,23 @@ export default function QuoteBuilder() {
     startNewQuote,
   } = useQuote();
 
+  // Di base apre sempre su Preventivo nuovo / editor corrente
+  const [activeView, setActiveView] = useState('editor');
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [mobilePreview, setMobilePreview] = useState(false);
-  const [archiveOpen, setArchiveOpen] = useState(false);
   const [archivedQuotes, setArchivedQuotes] = useState([]);
+  const [archiveQuery, setArchiveQuery] = useState('');
   const [saveNotice, setSaveNotice] = useState('');
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
   const fileInputRef = useRef(null);
 
-  // Costruisce il nome del file PDF (es. "Preventivo_20_Mario_Rossi")
   const getPdfFileName = () => {
-    const num = (quote.quote_number || '').trim() || 'Bozza';
+    const num = (quote.quote_number || '').trim();
     const client = (quote.client?.name || '').trim() || 'Cliente';
     const clean = (str) => str.replace(/[\\/:*?"<>|]+/g, '').replace(/\s+/g, '_');
-    return `Preventivo_${clean(client)}`;
+    return num ? `Preventivo_${clean(num)}_${clean(client)}` : `Preventivo_${clean(client)}`;
   };
 
-// All'avvio carica l'archivio dal database Supabase e aggiorna il numero progressivo
   useEffect(() => {
     getSavedQuotes().then((list) => {
       setArchivedQuotes(list);
@@ -67,23 +132,34 @@ export default function QuoteBuilder() {
     if (!quote.quote_number) {
       fetchNextQuoteNumber().then((nextNum) => setField('quote_number', nextNum));
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  const filteredArchive = useMemo(() => {
+    const q = archiveQuery.trim().toLowerCase();
+    if (!q) return archivedQuotes;
+    return archivedQuotes.filter((item) => {
+      const num = String(item.quote_number || '').toLowerCase();
+      const client = String(item.client?.name || '').toLowerCase();
+      const obj = String(item.object_title || '').toLowerCase();
+      return num.includes(q) || client.includes(q) || obj.includes(q);
+    });
+  }, [archivedQuotes, archiveQuery]);
+
   const handleSaveQuote = async () => {
-    setSaveNotice('Salvataggio in corso...');
+    setSaveNotice('Salvataggio…');
     const updatedList = await saveQuoteToArchive(quote, totals.total);
     setArchivedQuotes(updatedList);
-    setSaveNotice('Salvato nel cloud!');
+    setSaveNotice('Salvato');
     window.setTimeout(() => setSaveNotice(''), 2500);
   };
 
   const handleDeleteFromArchive = async (quoteId) => {
-    if (!window.confirm('Eliminare definitivamente questo preventivo dal database?')) return;
+    if (!window.confirm('Eliminare definitivamente questo preventivo dall’archivio?')) return;
     const updatedList = await deleteQuoteFromArchive(quoteId);
     setArchivedQuotes(updatedList);
   };
 
-  // 2. Carica un preventivo salvato nell'editor per modificarlo
   const loadQuoteIntoEditor = (savedQuote) => {
     const fields = [
       'id',
@@ -102,32 +178,32 @@ export default function QuoteBuilder() {
         setField(field, savedQuote[field]);
       }
     });
-    setArchiveOpen(false);
+    setActiveView('editor');
+    setSidebarOpen(false);
   };
 
-  // 3. Duplica un vecchio preventivo (nuovo ID, data di oggi e nuovo numero)
-  const handleDuplicateFromArchive = (savedQuote) => {
+  const handleDuplicateFromArchive = async (savedQuote) => {
+    const nextNum = await fetchNextQuoteNumber();
     const duplicated = {
       ...savedQuote,
       id: makeId('quote'),
-      quote_number: getNextQuoteNumber(),
+      quote_number: nextNum,
       date: todayIso(),
     };
     loadQuoteIntoEditor(duplicated);
   };
 
-
-  // 5. Importa un preventivo da file .json
   const handleImportFile = (event) => {
     const file = event.target.files?.[0];
     if (!file) return;
     const reader = new FileReader();
-    reader.onload = (e) => {
+    reader.onload = async (e) => {
       try {
         const parsed = JSON.parse(String(e.target?.result || ''));
         if (parsed && Array.isArray(parsed.sections)) {
           loadQuoteIntoEditor(parsed);
-          const updatedList = saveQuoteToArchive(parsed);
+          const importedTotal = computeQuoteTotals(parsed.sections).total;
+          const updatedList = await saveQuoteToArchive(parsed, importedTotal);
           setArchivedQuotes(updatedList);
         } else {
           window.alert('File non valido.');
@@ -140,7 +216,6 @@ export default function QuoteBuilder() {
     event.target.value = '';
   };
 
-  // 6. Stampa / Salva come PDF dal dialogo di sistema (con nome file automatico)
   const handlePrint = () => {
     handleSaveQuote();
     setMobilePreview(false);
@@ -152,7 +227,6 @@ export default function QuoteBuilder() {
     }, 60);
   };
 
-// Scarica direttamente il PDF con piè di pagina ripetuto su OGNI pagina
   const handleDownloadPdf = async () => {
     await handleSaveQuote();
     const element = document.getElementById('documento-preventivo');
@@ -161,7 +235,7 @@ export default function QuoteBuilder() {
     try {
       setIsGeneratingPdf(true);
       const opt = {
-        margin: [12, 12, 20, 12], // 20mm in basso riservati al piè di pagina su ogni foglio
+        margin: [12, 12, 20, 12],
         filename: `${getPdfFileName()}.pdf`,
         image: { type: 'jpeg', quality: 0.98 },
         html2canvas: { scale: 2, useCORS: true },
@@ -187,12 +261,10 @@ export default function QuoteBuilder() {
 
       for (let i = 1; i <= totalPages; i += 1) {
         pdf.setPage(i);
-        // Linea sottile separatrice a fondo pagina
         pdf.setDrawColor(203, 213, 225);
         pdf.setLineWidth(0.3);
         pdf.line(12, 282, 198, 282);
 
-        // Testo piè di pagina a sinistra, contatti al centro/destra e numero pagina
         pdf.setFont('helvetica', 'normal');
         pdf.setFontSize(7.5);
         pdf.setTextColor(100, 116, 139);
@@ -212,75 +284,139 @@ export default function QuoteBuilder() {
     }
   };
 
-  const handleNewQuote = () => {
+  const handleNewQuote = async () => {
     const hasContent = quote.client.name.trim() || quote.object_title.trim();
-    if (hasContent && !window.confirm('Iniziare un nuovo preventivo? (Consiglio: clicca prima su "Salva" per non perderlo).')) {
+    if (
+      hasContent &&
+      !window.confirm('Iniziare un nuovo preventivo? (Salva prima se non vuoi perdere la bozza attuale).')
+    ) {
       return;
     }
     saveLastQuoteNumber(quote.quote_number);
     startNewQuote();
+    const nextNum = await fetchNextQuoteNumber();
+    setField('quote_number', nextNum);
+    setActiveView('editor');
+    setSidebarOpen(false);
+  };
+
+  const switchView = (view) => {
+    setActiveView(view);
+    setSidebarOpen(false);
   };
 
   return (
     <>
-      <div className="tp-app">
-        <div className="tp-fx" aria-hidden="true" />
+      <div className="app-shell no-print">
+        {sidebarOpen ? (
+          <div className="sidebar-backdrop" onClick={() => setSidebarOpen(false)} />
+        ) : null}
 
-        <header className="tp-header no-print">
-          <div className="tp-brand">
-            <span className="tp-brand-mark">{quote.issuer.logo_text || 'PV'}</span>
+        {/* MENU A SINISTRA */}
+        <aside className={`app-sidebar ${sidebarOpen ? 'is-open' : ''}`} aria-label="Navigazione principale">
+          <div className="sidebar-brand">
+            <span className="sidebar-logo">{quote.issuer.logo_text || 'CM'}</span>
             <div style={{ minWidth: 0 }}>
-              <div className="tp-brand-name">{quote.issuer.name || 'Preventivatore'}</div>
-              <div className="tp-brand-sub">
-                {saveNotice ? (
-                  <span style={{ color: '#10b981', fontWeight: 600 }}>{saveNotice}</span>
-                ) : (
-                  'Redazione preventivi'
-                )}
-              </div>
+              <div className="sidebar-brand-name">{quote.issuer.name || 'Preventivatore'}</div>
+              <div className="sidebar-brand-sub">Gestione preventivi</div>
             </div>
           </div>
 
-          <div style={{ marginLeft: 'auto', display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-            <button type="button" className="btn btn-ghost btn-sm" onClick={handleNewQuote}>
-              Nuovo
-            </button>
-            <button type="button" className="btn btn-ghost btn-sm" onClick={handleSaveQuote}>
-              💾 Salva
-            </button>
+          <div className="sidebar-cta">
             <button
               type="button"
-              className="btn btn-ghost btn-sm"
-              onClick={() => setArchiveOpen(true)}
+              className="btn btn-primary"
+              style={{ width: '100%' }}
+              onClick={handleNewQuote}
             >
-              📂 Archivio ({archivedQuotes.length})
-            </button>
-            <button
-              type="button"
-              className="btn btn-ghost btn-sm no-print"
-              onClick={handleDownloadPdf}
-              disabled={isGeneratingPdf}
-            >
-              {isGeneratingPdf ? 'Creazione PDF…' : '⬇ Scarica PDF'}
-            </button>
-            <button type="button" className="btn btn-primary btn-sm no-print" onClick={handlePrint}>
-              Stampa / PDF
+              <IconPlus />
+              Nuovo preventivo
             </button>
           </div>
-        </header>
 
-        {/* PANNELLO ARCHIVIO PREVENTIVI PER MODIFICARLI IN FUTURO */}
-        {archiveOpen ? (
-          <div className="archive-modal-backdrop no-print" onClick={() => setArchiveOpen(false)}>
-            <div className="archive-modal" onClick={(e) => e.stopPropagation()}>
-              <div className="row-between" style={{ marginBottom: 14 }}>
-                <div>
-                  <span className="eyebrow">Archivio Preventivi</span>
-                  <h3 style={{ margin: '4px 0 0', fontSize: 18 }}>
-                    Preventivi salvati ({archivedQuotes.length})
-                  </h3>
+          <nav className="sidebar-nav">
+            <div className="sidebar-section-label">Menu</div>
+
+            <button
+              type="button"
+              className={`nav-item ${activeView === 'editor' ? 'is-active' : ''}`}
+              onClick={() => switchView('editor')}
+            >
+              <IconFile />
+              <span>Preventivo nuovo</span>
+            </button>
+
+            <button
+              type="button"
+              className={`nav-item ${activeView === 'archive' ? 'is-active' : ''}`}
+              onClick={() => switchView('archive')}
+            >
+              <IconArchive />
+              <span>Archivio</span>
+              <span className="nav-badge">{archivedQuotes.length}</span>
+            </button>
+          </nav>
+
+          <div className="sidebar-footer">
+            <span>{quote.issuer.vat ? `P.IVA ${quote.issuer.vat}` : 'Dati azienda configurabili'}</span>
+            <span style={{ opacity: 0.8 }}>{clients.length} clienti in rubrica</span>
+          </div>
+        </aside>
+
+        {/* AREA DI LAVORO PRINCIPALE */}
+        <div className="app-main">
+          <header className="app-topbar">
+            <div className="topbar-left">
+              <button
+                type="button"
+                className="btn btn-icon mobile-menu-btn"
+                onClick={() => setSidebarOpen(true)}
+                aria-label="Apri menu"
+              >
+                <IconMenu />
+              </button>
+
+              <div style={{ minWidth: 0 }}>
+                <div className="topbar-title">
+                  {activeView === 'editor'
+                    ? quote.quote_number
+                      ? `Preventivo N° ${quote.quote_number}`
+                      : 'Preventivo nuovo'
+                    : 'Archivio preventivi'}
                 </div>
-                <div style={{ display: 'flex', gap: 8 }}>
+                <div className="topbar-sub">
+                  {activeView === 'editor'
+                    ? quote.client?.name?.trim() || 'Compila i campi per generare il documento'
+                    : `${archivedQuotes.length} ${archivedQuotes.length === 1 ? 'preventivo salvato' : 'preventivi salvati'}`}
+                </div>
+              </div>
+
+              {saveNotice ? <span className="status-pill">{saveNotice}</span> : null}
+            </div>
+
+            <div className="topbar-actions">
+              {activeView === 'editor' ? (
+                <>
+                  <button type="button" className="btn btn-ghost btn-sm" onClick={handleSaveQuote}>
+                    <IconSave />
+                    Salva
+                  </button>
+                  <button
+                    type="button"
+                    className="btn btn-ghost btn-sm"
+                    onClick={handleDownloadPdf}
+                    disabled={isGeneratingPdf}
+                  >
+                    <IconDownload />
+                    {isGeneratingPdf ? 'Creazione…' : 'Scarica PDF'}
+                  </button>
+                  <button type="button" className="btn btn-primary btn-sm" onClick={handlePrint}>
+                    <IconPrinter />
+                    Stampa
+                  </button>
+                </>
+              ) : (
+                <>
                   <input
                     ref={fileInputRef}
                     type="file"
@@ -293,165 +429,208 @@ export default function QuoteBuilder() {
                     className="btn btn-ghost btn-sm"
                     onClick={() => fileInputRef.current?.click()}
                   >
-                    Carica da file (.json)
+                    Importa .json
                   </button>
                   <button
                     type="button"
                     className="btn btn-ghost btn-sm"
                     onClick={() => exportQuoteToFile(quote)}
                   >
-                    Scarica corrente (.json)
+                    Esporta bozza .json
                   </button>
-                  <button
-                    type="button"
-                    className="btn btn-ghost btn-sm"
-                    onClick={() => setArchiveOpen(false)}
-                  >
-                    Chiudi ✕
-                  </button>
-                </div>
-              </div>
-
-              {archivedQuotes.length === 0 ? (
-                <p className="small muted" style={{ padding: '24px 0', textAlign: 'center' }}>
-                  Nessun preventivo salvato. Clicca su "💾 Salva" in alto per salvare il preventivo attuale e modificarlo quando vuoi.
-                </p>
-              ) : (
-                <div className="archive-list">
-                  {archivedQuotes.map((item) => (
-                    <div key={item.id} className="archive-item">
-                      <div>
-                        <div style={{ fontWeight: 700, fontSize: 14 }}>
-                          Preventivo N° {item.quote_number || '—'} ·{' '}
-                          {item.client?.name || 'Cliente senza nome'}
-                        </div>
-                        <div className="small muted">
-                          Data: {formatDate(item.date) || '—'} ·{' '}
-                          {item.object_title || 'Nessun oggetto'}
-                        </div>
-                      </div>
-                      <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-                        <button
-                          type="button"
-                          className="btn btn-primary btn-sm"
-                          onClick={() => loadQuoteIntoEditor(item)}
-                        >
-                          Apri e modifica
-                        </button>
-                        <button
-                          type="button"
-                          className="btn btn-ghost btn-sm"
-                          onClick={() => handleDuplicateFromArchive(item)}
-                          title="Crea un nuovo preventivo partendo da questo"
-                        >
-                          Duplica
-                        </button>
-                        <button
-                          type="button"
-                          className="btn btn-ghost btn-sm"
-                          onClick={() => exportQuoteToFile(item)}
-                          title="Scarica copia su PC"
-                        >
-                          File
-                        </button>
-                        <button
-                          type="button"
-                          className="btn btn-icon btn-danger"
-                          onClick={() => handleDeleteFromArchive(item.id)}
-                          title="Elimina"
-                        >
-                          ✕
-                        </button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
+                </>
               )}
             </div>
-          </div>
-        ) : null}
+          </header>
 
-        <main className="tp-container">
-          <div className="tp-layout">
-            <div className="tp-col">
-              <IssuerPanel issuer={quote.issuer} onChange={setIssuerField} />
+          <main className="tp-container">
+            {activeView === 'editor' ? (
+              <div className="tp-layout">
+                <div className="tp-col">
+                  <IssuerPanel issuer={quote.issuer} onChange={setIssuerField} />
 
-              <ClientPanel
-                client={quote.client}
-                clients={clients}
-                onChange={setClientField}
-                onApplyClient={applyClient}
-                onRememberClient={rememberClient}
-              />
+                  <ClientPanel
+                    client={quote.client}
+                    clients={clients}
+                    onChange={setClientField}
+                    onApplyClient={applyClient}
+                    onRememberClient={rememberClient}
+                  />
 
-              <DocumentMeta quote={quote} onChange={setField} />
+                  <DocumentMeta quote={quote} onChange={setField} />
 
-              <Panel
-                step="04"
-                eyebrow="Capitolato"
-                title="Voci del preventivo"
-                sub="Sezioni libere: “OPZIONE 1”, “Ricambio Aria”, quello che serve."
-              >
-                <div>
-                  {quote.sections.map((section, index) => (
-                    <SectionEditor
-                      key={section.id}
-                      section={section}
-                      index={index}
-                      sectionCount={quote.sections.length}
-                      sectionAmount={totals.bySection[section.id]?.amount || 0}
-                      onUpdateSection={(field, value) => updateSection(section.id, field, value)}
-                      onRemoveSection={() => removeSection(section.id)}
-                      onMoveSection={(direction) => moveSection(section.id, direction)}
-                      onAddLine={() => addLine(section.id)}
-                      onUpdateLine={(lineId, field, value) => updateLine(section.id, lineId, field, value)}
-                      onDuplicateLine={(lineId) => duplicateLine(section.id, lineId)}
-                      onRemoveLine={(lineId) => removeLine(section.id, lineId)}
-                    />
-                  ))}
+                  <Panel
+                    step="04"
+                    title="Voci del preventivo"
+                    sub="Organizza le lavorazioni in una o più sezioni con relativo importo."
+                  >
+                    <div>
+                      {quote.sections.map((section, index) => (
+                        <SectionEditor
+                          key={section.id}
+                          section={section}
+                          index={index}
+                          sectionCount={quote.sections.length}
+                          sectionAmount={totals.bySection[section.id]?.amount || 0}
+                          onUpdateSection={(field, value) => updateSection(section.id, field, value)}
+                          onRemoveSection={() => removeSection(section.id)}
+                          onMoveSection={(direction) => moveSection(section.id, direction)}
+                          onAddLine={() => addLine(section.id)}
+                          onUpdateLine={(lineId, field, value) => updateLine(section.id, lineId, field, value)}
+                          onDuplicateLine={(lineId) => duplicateLine(section.id, lineId)}
+                          onRemoveLine={(lineId) => removeLine(section.id, lineId)}
+                        />
+                      ))}
+                    </div>
+
+                    <button
+                      type="button"
+                      className="btn btn-ghost"
+                      style={{ width: '100%', marginTop: 14, borderStyle: 'dashed' }}
+                      onClick={addSection}
+                    >
+                      + Aggiungi sezione
+                    </button>
+                  </Panel>
+
+                  <TermsPanel quote={quote} onChange={setField} onAppend={appendText} />
                 </div>
 
-                <button
-                  type="button"
-                  className="btn btn-ghost"
-                  style={{ width: '100%', marginTop: 14, borderStyle: 'dashed' }}
-                  onClick={addSection}
-                >
-                  + Aggiungi sezione
-                </button>
-              </Panel>
-
-              <TermsPanel quote={quote} onChange={setField} onAppend={appendText} />
-            </div>
-
-            <div className="tp-col no-print">
-              <div className="preview-dock">
-                <div className="row-between" style={{ marginBottom: 10 }}>
-                  <span className="eyebrow">Anteprima documento</span>
-                  <span className="small muted">{quote.sections.length} sezioni</span>
-                </div>
-                <div className="doc-frame">
-                  <div className="doc-scroll">
-                    <QuotePreview quote={quote} />
+                {/* ANTEPRIMA LIVE SU DESKTOP LARGO */}
+                <div className="tp-col">
+                  <div className="preview-dock">
+                    <div className="row-between" style={{ marginBottom: 8 }}>
+                      <span className="eyebrow">Anteprima documento</span>
+                      <span className="small muted">
+                        {quote.sections.length} {quote.sections.length === 1 ? 'sezione' : 'sezioni'}
+                      </span>
+                    </div>
+                    <div className="doc-frame">
+                      <div className="doc-scroll">
+                        <QuotePreview quote={quote} />
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
-          </div>
-        </main>
+            ) : (
+              /* VISTA ARCHIVIO */
+              <div>
+                <div className="archive-toolbar">
+                  <div className="archive-search">
+                    <IconSearch />
+                    <input
+                      type="search"
+                      className="input"
+                      placeholder="Cerca per numero, cliente o oggetto…"
+                      value={archiveQuery}
+                      onChange={(e) => setArchiveQuery(e.target.value)}
+                    />
+                  </div>
+                </div>
 
-        <TotalsBar
-          totals={totals}
-          savedAt={savedAt}
-          onPrint={handlePrint}
-          onOpenPreview={() => setMobilePreview(true)}
-        />
+                <div className="archive-table-wrap">
+                  {filteredArchive.length === 0 ? (
+                    <div className="archive-empty">
+                      {archivedQuotes.length === 0
+                        ? 'Nessun preventivo in archivio. Compila un preventivo e clicca "Salva" per archiviarlo.'
+                        : 'Nessun preventivo corrisponde alla ricerca.'}
+                    </div>
+                  ) : (
+                    <>
+                      <div className="archive-row archive-row-head">
+                        <span>Numero</span>
+                        <span>Cliente e oggetto</span>
+                        <span>Data</span>
+                        <span style={{ textAlign: 'right' }}>Totale</span>
+                        <span style={{ textAlign: 'right' }}>Azioni</span>
+                      </div>
 
+                      {filteredArchive.map((item) => {
+                        const itemTotal = computeQuoteTotals(item.sections || []).total;
+                        return (
+                          <div key={item.id} className="archive-row">
+                            <span className="archive-num">N° {item.quote_number || '—'}</span>
+
+                            <div style={{ minWidth: 0 }}>
+                              <div className="archive-client">
+                                {item.client?.name || 'Cliente senza nome'}
+                              </div>
+                              <div className="archive-obj">
+                                {item.object_title || 'Nessun oggetto specificato'}
+                              </div>
+                            </div>
+
+                            <span className="small muted">{formatDate(item.date) || '—'}</span>
+
+                            <span className="amount" style={{ textAlign: 'right', fontWeight: 600 }}>
+                              € {formatCurrency(itemTotal)}
+                            </span>
+
+                            <div className="archive-actions">
+                              <button
+                                type="button"
+                                className="btn btn-primary btn-sm"
+                                onClick={() => loadQuoteIntoEditor(item)}
+                              >
+                                Apri
+                              </button>
+                              <button
+                                type="button"
+                                className="btn btn-ghost btn-sm"
+                                onClick={() => handleDuplicateFromArchive(item)}
+                                title="Crea una copia con nuovo numero e data di oggi"
+                              >
+                                Duplica
+                              </button>
+                              <button
+                                type="button"
+                                className="btn btn-ghost btn-sm"
+                                onClick={() => exportQuoteToFile(item)}
+                                title="Scarica backup .json"
+                              >
+                                JSON
+                              </button>
+                              <button
+                                type="button"
+                                className="btn btn-icon btn-danger"
+                                onClick={() => handleDeleteFromArchive(item.id)}
+                                title="Elimina"
+                                aria-label="Elimina preventivo"
+                              >
+                                ✕
+                              </button>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </>
+                  )}
+                </div>
+              </div>
+            )}
+          </main>
+
+          {activeView === 'editor' ? (
+            <TotalsBar
+              totals={totals}
+              savedAt={savedAt}
+              onPrint={handlePrint}
+              onOpenPreview={() => setMobilePreview(true)}
+            />
+          ) : null}
+        </div>
+
+        {/* ANTEPRIMA FULLSCREEN SU SCHERMI MEDI / MOBILE */}
         {mobilePreview ? (
           <div className="preview-mobile-open no-print">
             <div className="preview-mobile-bar">
               <span className="eyebrow">Anteprima documento</span>
-              <button type="button" className="btn btn-ghost btn-sm" onClick={() => setMobilePreview(false)}>
+              <button
+                type="button"
+                className="btn btn-ghost btn-sm"
+                onClick={() => setMobilePreview(false)}
+              >
                 Chiudi
               </button>
             </div>
@@ -462,6 +641,7 @@ export default function QuoteBuilder() {
         ) : null}
       </div>
 
+      {/* AREA DEDICATA ALLA STAMPA DI SISTEMA */}
       <div className="print-area">
         <QuotePreview quote={quote} />
       </div>

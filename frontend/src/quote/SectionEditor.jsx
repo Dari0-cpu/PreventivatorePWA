@@ -14,7 +14,6 @@ export function SectionEditor({
 }) {
   const editorRef = useRef(null);
 
-  // Sincronizza il contenuto HTML solo quando cambia dall'esterno (senza far saltare il cursore)
   useEffect(() => {
     if (editorRef.current && editorRef.current.innerHTML !== (section.body || '')) {
       editorRef.current.innerHTML = section.body || '';
@@ -22,7 +21,7 @@ export function SectionEditor({
   }, [section.id, section.body]);
 
   const execCommand = (event, command) => {
-    event.preventDefault(); // Fondamentale: mantiene il testo selezionato quando clicchi il bottone
+    event.preventDefault();
     if (!editorRef.current) return;
     editorRef.current.focus();
     document.execCommand(command, false, null);
@@ -33,11 +32,9 @@ export function SectionEditor({
 
   return (
     <div className="section-card">
-      {/* 1. TITOLO SEZIONE (Senza prezzo in alto) */}
+      {/* 1. TITOLO SEZIONE */}
       <div className="section-head">
-        <span className="eyebrow" style={{ flex: 'none' }}>
-          {String(index + 1).padStart(2, '0')}
-        </span>
+        <span className="step-num">{String(index + 1).padStart(2, '0')}</span>
         <div style={{ flex: 1, minWidth: 0 }}>
           <InlineTitle
             value={section.title}
@@ -47,7 +44,7 @@ export function SectionEditor({
         </div>
       </div>
 
-      <div className="chip-row" style={{ marginBottom: 12 }}>
+      <div className="chip-row" style={{ marginBottom: 14 }}>
         {SECTION_TITLE_PRESETS.map((preset) => (
           <button
             key={preset}
@@ -60,7 +57,7 @@ export function SectionEditor({
         ))}
       </div>
 
-      {/* 2. EDITOR DESCRIZIONE CON TOOLBAR E LISTE FUNZIONANTI */}
+      {/* 2. EDITOR DESCRIZIONE */}
       <div className="field" style={{ marginBottom: 14 }}>
         <span className="field-label">Descrizione delle lavorazioni</span>
 
@@ -116,23 +113,23 @@ export function SectionEditor({
             className="custom-rich-editor"
             contentEditable
             suppressContentEditableWarning
-            data-placeholder="Descrivi le lavorazioni... Usa i pulsanti sopra per elenchi puntati, numerati, grassetto o sottolineato."
+            data-placeholder="Descrivi le lavorazioni... Usa i pulsanti sopra per elenchi, grassetto o sottolineato."
             onInput={(e) => onUpdateSection('body', e.currentTarget.innerHTML)}
           />
         </div>
       </div>
 
-      {/* 3. NOTE DELLA SEZIONE (In grigio, posizionabili sopra o sotto al prezzo) */}
+      {/* 3. NOTE DELLA SEZIONE */}
       <div className="field" style={{ marginBottom: 14 }}>
-        <div className="row-between" style={{ marginBottom: 6 }}>
-          <label className="field-label" htmlFor={`sec-notes-${section.id}`} style={{ margin: 0 }}>
-            Note della sezione (in grigio nel PDF)
+        <div className="row-between" style={{ marginBottom: 4 }}>
+          <label className="field-label" htmlFor={`sec-notes-${section.id}`}>
+            Note della sezione (stampate in grigio nel PDF)
           </label>
           <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
             <span className="small muted">Posizione:</span>
             <select
               className="select"
-              style={{ width: 'auto', padding: '4px 8px', fontSize: 12 }}
+              style={{ width: 'auto', minHeight: 30, padding: '3px 26px 3px 8px', fontSize: 12 }}
               value={notesPosition}
               onChange={(e) => onUpdateSection('notes_position', e.target.value)}
             >
@@ -145,7 +142,7 @@ export function SectionEditor({
           id={`sec-notes-${section.id}`}
           className="textarea"
           rows={2}
-          style={{ color: '#9ca3af', fontStyle: 'italic' }}
+          style={{ fontStyle: 'italic' }}
           placeholder="Es. Note aggiuntive per questa sezione (opzionale)…"
           value={section.section_notes || ''}
           onChange={(e) => onUpdateSection('section_notes', e.target.value)}
@@ -186,12 +183,12 @@ export function SectionEditor({
         </div>
 
         <div className="amount-preview">
-          <span className="field-label">Come esce nel box a fine sezione</span>
-          <span className="amount-preview-value" style={{ fontSize: 13 }}>
-            Il prezzo di quanto sopra descritto è{' '}
+          <span className="field-label">Anteprima riga prezzo</span>
+          <span className="amount-preview-value">
+            Il prezzo di quanto sopra descritto è:{' '}
             <strong>
               € {formatCurrency(sectionAmount)}
-              {section.amount_note ? <em> {section.amount_note}</em> : null}
+              {section.amount_note ? ` ${section.amount_note}` : ''}
             </strong>
           </span>
         </div>
@@ -204,17 +201,17 @@ export function SectionEditor({
       </datalist>
 
       {/* 5. AZIONI SEZIONE */}
-      <div className="row-between" style={{ marginTop: 16 }}>
+      <div className="row-between" style={{ marginTop: 14 }}>
         <label className="check" title="La sezione resta fuori dal totale generale">
           <input
             type="checkbox"
             checked={section.is_optional}
             onChange={(event) => onUpdateSection('is_optional', event.target.checked)}
           />
-          Opzione alternativa (fuori dal totale)
+          Opzione alternativa (esclusa dal totale)
         </label>
 
-        <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+        <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
           <button
             type="button"
             className="btn btn-icon"
