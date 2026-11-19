@@ -5,6 +5,11 @@ function getSpeechRecognitionCtor() {
   return window.SpeechRecognition || window.webkitSpeechRecognition || null;
 }
 
+function isAndroidDevice() {
+  if (typeof navigator === 'undefined') return false;
+  return /Android/i.test(navigator.userAgent || '');
+}
+
 export function useSpeechToText({ lang = 'it-IT', onFinalTranscript } = {}) {
   const isSupported = Boolean(getSpeechRecognitionCtor());
   const [isListening, setIsListening] = useState(false);
@@ -13,9 +18,14 @@ export function useSpeechToText({ lang = 'it-IT', onFinalTranscript } = {}) {
 
   const recognitionRef = useRef(null);
   const shouldListenRef = useRef(false);
+  const isRunningRef = useRef(false);
   const restartTimerRef = useRef(null);
   const onFinalRef = useRef(onFinalTranscript);
-  const lastFinalRef = useRef({ text: '', time: 0 });
+
+  // Su Android accumula la frase corrente e la salva UNA sola volta in onend
+  const sessionBufferRef = useRef('');
+  // Su Desktop evita di salvare due volte lo stesso resultIndex
+  const committedIndexRef = useRef(-1);
 
   useEffect(() => {
     onFinalRef.current = onFinalTranscript;
@@ -28,38 +38,64 @@ export function useSpeechToText({ lang = 'it-IT', onFinalTranscript } = {}) {
     }
   };
 
+  const flushAndroidBuffer = useCallback(() => {
+    const text = sessionBufferRef.current.trim();
+    sessionBufferRef.current = '';
+    setInterimTranscript('');
+    if (text) {
+      onFinalRef.current?.(text);
+    }
+  }, []);
+
   const stop = useCallback(() => {
     shouldListenRef.current = false;
     clearRestartTimer();
     setIsListening(false);
-    setInterimTranscript('');
 
     const rec = recognitionRef.current;
-    if (rec) {
+    if (rec && isRunningRef.current) {
       try {
         rec.stop();
       } catch {
-        /* già fermo */
+        isRunningRef.current = false;
+        flushAndroidBuffer();
       }
+    } else {
+      flushAndroidBuffer();
     }
-  }, []);
+  }, [flushAndroidBuffer]);
 
   const createInstance = useCallback(() => {
     const Ctor = getSpeechRecognitionCtor();
     if (!Ctor) return null;
 
+    const android = isAndroidDevice();
     const rec = new Ctor();
     rec.lang = lang;
-    rec.continuous = true;
+    // Fix Android: continuous=false evita il bug della frase ripetuta a ogni parola
+    rec.continuous = !android;
     rec.interimResults = true;
     rec.maxAlternatives = 1;
 
     rec.onstart = () => {
+      isRunningRef.current = true;
+      committedIndexRef.current = -1;
+      sessionBufferRef.current = '';
       setIsListening(true);
       setError('');
     };
 
     rec.onresult = (event) => {
+      if (android) {
+        const latest = event.results[event.results.length - 1]?.[0]?.transcript || '';
+        const cleaned = latest.trim();
+        if (cleaned) {
+          sessionBufferRef.current = cleaned;
+          setInterimTranscript(cleaned);
+        }
+        return;
+      }
+
       let interim = '';
       let finalChunk = '';
 
@@ -67,7 +103,10 @@ export function useSpeechToText({ lang = 'it-IT', onFinalTranscript } = {}) {
         const result = event.results[i];
         const transcript = result[0]?.transcript || '';
         if (result.isFinal) {
-          finalChunk += `${transcript} `;
+          if (i > committedIndexRef.current) {
+            committedIndexRef.current = i;
+            finalChunk += `${transcript} `;
+          }
         } else {
           interim += transcript;
         }
@@ -77,16 +116,7 @@ export function useSpeechToText({ lang = 'it-IT', onFinalTranscript } = {}) {
 
       const cleanedFinal = finalChunk.trim();
       if (cleanedFinal) {
-        // Protezione contro duplicati ravvicinati su Chrome Android
-        const now = Date.now();
-        const isAndroidDup =
-          cleanedFinal.toLowerCase() === lastFinalRef.current.text.toLowerCase() &&
-          now - lastFinalRef.current.time < 1200;
-
-        if (!isAndroidDup) {
-          lastFinalRef.current = { text: cleanedFinal, time: now };
-          onFinalRef.current?.(cleanedFinal);
-        }
+        onFinalRef.current?.(cleanedFinal);
         setInterimTranscript('');
       }
     };
@@ -122,8 +152,14 @@ export function useSpeechToText({ lang = 'it-IT', onFinalTranscript } = {}) {
     };
 
     rec.onend = () => {
-      setInterimTranscript('');
-      // Fix Android: riavvia automaticamente se l'utente non ha premuto Stop
+      isRunningRef.current = false;
+
+      if (android) {
+        flushAndroidBuffer();
+      } else {
+        setInterimTranscript('');
+      }
+
       if (shouldListenRef.current) {
         clearRestartTimer();
         restartTimerRef.current = window.setTimeout(() => {
@@ -134,14 +170,14 @@ export function useSpeechToText({ lang = 'it-IT', onFinalTranscript } = {}) {
             shouldListenRef.current = false;
             setIsListening(false);
           }
-        }, 150);
+        }, android ? 250 : 150);
       } else {
         setIsListening(false);
       }
     };
 
     return rec;
-  }, [lang]);
+  }, [flushAndroidBuffer, lang]);
 
   const start = useCallback(() => {
     if (!isSupported) {
@@ -164,7 +200,6 @@ export function useSpeechToText({ lang = 'it-IT', onFinalTranscript } = {}) {
     try {
       recognitionRef.current?.start();
     } catch {
-      // Se già attivo o in stato transitorio, ricrea l'istanza
       try {
         recognitionRef.current?.abort();
       } catch {
@@ -191,10 +226,10 @@ export function useSpeechToText({ lang = 'it-IT', onFinalTranscript } = {}) {
 
   const clearError = useCallback(() => setError(''), []);
 
-  // Cleanup allo smontaggio / cambio vista
   useEffect(() => {
     return () => {
       shouldListenRef.current = false;
+      isRunningRef.current = false;
       clearRestartTimer();
       if (recognitionRef.current) {
         try {
