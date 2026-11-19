@@ -407,27 +407,44 @@ export function DicoView({
               </div>
             </div>
 
-            <div className="grid-3" style={{ marginTop: 12 }}>
+<div className="grid-2" style={{ marginTop: 12 }}>
               <TextField
                 id="dico-titolare"
                 label="Titolare / Legale Rappresentante"
                 value={activeDico.rt?.titolare || ''}
                 onChange={(v) => updateNested('rt', 'titolare', v)}
-                placeholder="Nome e Cognome"
+                placeholder="Cristina Giacomozzi"
               />
               <TextField
                 id="dico-rt"
                 label="Responsabile Tecnico"
                 value={activeDico.rt?.responsabile_tecnico || ''}
                 onChange={(v) => updateNested('rt', 'responsabile_tecnico', v)}
-                placeholder="Nome e Cognome"
+                placeholder="Mario Pimpini"
+              />
+            </div>
+
+            <div className="grid-3" style={{ marginTop: 12 }}>
+              <TextField
+                id="dico-cciaa-prov"
+                label="CCIAA Provincia"
+                value={activeDico.rt?.cciaa_provincia || ''}
+                onChange={(v) => updateNested('rt', 'cciaa_provincia', v)}
+                placeholder="Roma (RM)"
               />
               <TextField
                 id="dico-cciaa-num"
-                label="CCIAA (Prov. e N° REA)"
+                label="N° REA"
                 value={activeDico.rt?.cciaa_numero || ''}
                 onChange={(v) => updateNested('rt', 'cciaa_numero', v)}
-                placeholder="RM-..."
+                placeholder="1752188"
+              />
+              <TextField
+                id="dico-albo"
+                label="Albo Artigiani (opzionale)"
+                value={activeDico.rt?.albo_artigiani || ''}
+                onChange={(v) => updateNested('rt', 'albo_artigiani', v)}
+                placeholder="Opzionale"
               />
             </div>
           </div>

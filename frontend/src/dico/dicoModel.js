@@ -31,7 +31,7 @@ export const BUILDING_USES = [
   { id: 'altri_usi', label: 'Altri usi' },
 ];
 
-export const COPY_TARGETS = ['Committente', 'Ditta', 'Comune / Sportello Unico', 'CCIAA'];
+export const COPY_TARGETS = ['Privato', 'Committente', 'Ditta', 'Comune / Sportello Unico', 'CCIAA'];
 
 export const NORM_PRESETS = [
   'UNI EN 378-3 (Impianti di refrigerazione e pompe di calore)',
@@ -47,11 +47,11 @@ export const NORM_PRESETS = [
 ];
 
 export const DEFAULT_RT = {
-  titolare: '',
-  responsabile_tecnico: '',
+  titolare: 'Cristina Giacomozzi',
+  responsabile_tecnico: 'Mario Pimpini',
   qualifica: 'Responsabile Tecnico',
-  cciaa_provincia: 'Roma',
-  cciaa_numero: '',
+  cciaa_provincia: 'Roma (RM)',
+  cciaa_numero: '1752188',
   albo_artigiani: '',
 };
 
@@ -59,7 +59,21 @@ export function loadSavedRtDefaults() {
   try {
     const raw = window.localStorage.getItem(DICO_RT_KEY);
     if (!raw) return { ...DEFAULT_RT };
-    return { ...DEFAULT_RT, ...JSON.parse(raw) };
+    const parsed = JSON.parse(raw) || {};
+    return {
+      titolare: parsed.titolare?.trim() ? parsed.titolare : DEFAULT_RT.titolare,
+      responsabile_tecnico: parsed.responsabile_tecnico?.trim()
+        ? parsed.responsabile_tecnico
+        : DEFAULT_RT.responsabile_tecnico,
+      qualifica: parsed.qualifica?.trim() ? parsed.qualifica : DEFAULT_RT.qualifica,
+      cciaa_provincia: parsed.cciaa_provincia?.trim()
+        ? parsed.cciaa_provincia
+        : DEFAULT_RT.cciaa_provincia,
+      cciaa_numero: parsed.cciaa_numero?.trim()
+        ? parsed.cciaa_numero
+        : DEFAULT_RT.cciaa_numero,
+      albo_artigiani: parsed.albo_artigiani ?? DEFAULT_RT.albo_artigiani,
+    };
   } catch {
     return { ...DEFAULT_RT };
   }
@@ -112,7 +126,7 @@ export function createEmptyDico(dicoNumber = '1') {
     id: makeId('dico'),
     dico_number: String(dicoNumber || '1'),
     date: todayIso(),
-    copy_for: 'Committente',
+    copy_for: 'Privato',
     rt,
     client: createEmptyClient(),
     same_owner: true,
@@ -169,7 +183,7 @@ export function createEmptyDico(dicoNumber = '1') {
       include_legenda: true,
       include_relazione_schematica: true,
       include_libretto: true,
-      libretto_type: 'clima', // 'clima' | 'termico' | 'idrico_gas'
+      libretto_type: 'clima',
     },
     previous_dico_ref: '',
     notes: '',
@@ -181,7 +195,6 @@ export function createEmptyDico(dicoNumber = '1') {
   };
 }
 
-/** Calcola la lunghezza in metri di una polilinea (supporta sia points[] che x1/y1/x2/y2). */
 export function computePipeMeters(pipe, gridSize = 20, metersPerCell = 0.25) {
   const pts =
     Array.isArray(pipe.points) && pipe.points.length >= 2
@@ -198,10 +211,6 @@ export function computePipeMeters(pipe, gridSize = 20, metersPerCell = 0.25) {
   return Math.max(0.2, Math.round(m * 100) / 100);
 }
 
-/**
- * Sincronizza CAD -> Sez. III Materiali con corrispondenza 1-a-1 per sigla (P1, P2, P4...)
- * esattamente come mrDico, mantenendo Marca, Matricola e note già inserite.
- */
 export function syncMaterialsFromCad(drawing, existingMaterials = []) {
   const elements = Array.isArray(drawing?.elements) ? drawing.elements : [];
   const manualRows = existingMaterials.filter((m) => !m.fromCad);
@@ -261,7 +270,6 @@ export function syncMaterialsFromCad(drawing, existingMaterials = []) {
     }
   });
 
-  // Ordina per codice numerico (P1, P2, P4, P5...)
   cadRows.sort((a, b) => {
     const na = parseInt(String(a.code).replace(/\D+/g, ''), 10) || 9999;
     const nb = parseInt(String(b.code).replace(/\D+/g, ''), 10) || 9999;
@@ -271,9 +279,6 @@ export function syncMaterialsFromCad(drawing, existingMaterials = []) {
   return [...cadRows, ...manualRows];
 }
 
-/* =========================================================================
-   MODELLI PREIMPOSTATI PRONTI IN 1 CLICK (stile libreria mrDico)
-   ========================================================================= */
 export const DICO_TEMPLATES = [
   {
     id: 'clima_mansarda',
@@ -288,21 +293,15 @@ export const DICO_TEMPLATES = [
         backgroundImage: '',
         backgroundOpacity: 0.35,
         elements: [
-          // Solaio/pavimento tratteggiato
           { id: makeId('arch'), kind: 'hatchWall', x1: 40, y1: 580, x2: 960, y2: 580, thickness: 28 },
-          // Muro verticale destro mansarda
           { id: makeId('arch'), kind: 'hatchWall', x1: 680, y1: 220, x2: 680, y2: 580, thickness: 26 },
-          // Falda sinistra e falda destra tetto
           { id: makeId('arch'), kind: 'hatchWall', x1: 40, y1: 250, x2: 360, y2: 40, thickness: 18 },
           { id: makeId('arch'), kind: 'hatchWall', x1: 360, y1: 40, x2: 940, y2: 340, thickness: 18 },
-          // Finestra e staffa tetto
           { id: makeId('sym'), kind: 'symbol', symbolType: 'finestra_prospetto', x: 400, y: 290, rotation: 0, scale: 1.4 },
           { id: makeId('sym'), kind: 'symbol', symbolType: 'staffa_tetto', x: 840, y: 260, rotation: 0, scale: 1.2 },
-          // Impianto: P1 Split, P2 Unità esterna, P6 Pompa condensa
           { id: makeId('sym'), kind: 'symbol', symbolType: 'split_pavimento', code: 'P1', label: 'Split a pavimento', location: 'Mansarda', x: 400, y: 505, rotation: 0, scale: 1.25 },
           { id: makeId('sym'), kind: 'symbol', symbolType: 'unita_esterna', code: 'P2', label: 'Unità Esterna', location: 'Sul Tetto', x: 840, y: 195, rotation: 0, scale: 1.15 },
           { id: makeId('sym'), kind: 'symbol', symbolType: 'pompa_condensa', code: 'P6', label: 'Pompa scarico condensa', location: 'Mansarda', x: 750, y: 550, rotation: 0, scale: 1, posa: 'A vista' },
-          // Tubazioni polilinea: P4 Rame liquido, P5 Rame gas, P7 e P8 condensa
           {
             id: makeId('pipe'),
             kind: 'pipe',
@@ -315,12 +314,12 @@ export const DICO_TEMPLATES = [
             posa: 'In Canaletta',
             lengthMeters: 3.61,
             points: [
-              { x: 446, y: 528 },
-              { x: 446, y: 538 },
+              { x: 430, y: 527 },
+              { x: 430, y: 538 },
               { x: 706, y: 538 },
               { x: 706, y: 270 },
-              { x: 780, y: 240 },
-              { x: 828, y: 240 },
+              { x: 780, y: 243 },
+              { x: 826, y: 243 },
             ],
           },
           {
@@ -335,12 +334,12 @@ export const DICO_TEMPLATES = [
             posa: 'In Canaletta',
             lengthMeters: 3.64,
             points: [
-              { x: 432, y: 528 },
-              { x: 432, y: 548 },
+              { x: 412, y: 527 },
+              { x: 412, y: 548 },
               { x: 728, y: 548 },
               { x: 728, y: 290 },
-              { x: 790, y: 248 },
-              { x: 845, y: 248 },
+              { x: 790, y: 243 },
+              { x: 854, y: 243 },
             ],
           },
           {
@@ -355,8 +354,8 @@ export const DICO_TEMPLATES = [
             posa: 'In Canaletta',
             lengthMeters: 1.63,
             points: [
-              { x: 416, y: 528 },
-              { x: 416, y: 558 },
+              { x: 370, y: 527 },
+              { x: 370, y: 558 },
               { x: 734, y: 558 },
               { x: 734, y: 550 },
             ],
@@ -375,7 +374,7 @@ export const DICO_TEMPLATES = [
             points: [
               { x: 766, y: 550 },
               { x: 766, y: 270 },
-              { x: 800, y: 256 },
+              { x: 840, y: 243 },
             ],
           },
         ],
@@ -446,11 +445,12 @@ export const DICO_TEMPLATES = [
             posa: 'A vista / in guaina',
             lengthMeters: 4.5,
             points: [
-              { x: 78, y: 200 },
+              { x: 70, y: 182 },
+              { x: 70, y: 200 },
               { x: 164, y: 200 },
               { x: 196, y: 200 },
-              { x: 288, y: 200 },
-              { x: 288, y: 210 },
+              { x: 305, y: 200 },
+              { x: 305, y: 211 },
             ],
           },
           {
@@ -468,7 +468,7 @@ export const DICO_TEMPLATES = [
               { x: 328, y: 335 },
               { x: 600, y: 335 },
               { x: 600, y: 212 },
-              { x: 670, y: 212 },
+              { x: 669, y: 212 },
             ],
           },
           {
@@ -486,7 +486,7 @@ export const DICO_TEMPLATES = [
               { x: 328, y: 345 },
               { x: 620, y: 345 },
               { x: 620, y: 428 },
-              { x: 670, y: 428 },
+              { x: 669, y: 428 },
             ],
           },
         ],
@@ -554,9 +554,9 @@ export const DICO_TEMPLATES = [
             posa: 'Sottotraccia isolata',
             lengthMeters: 7.2,
             points: [
-              { x: 268, y: 185 },
-              { x: 460, y: 185 },
-              { x: 460, y: 165 },
+              { x: 271, y: 185 },
+              { x: 469, y: 185 },
+              { x: 469, y: 164 },
               { x: 640, y: 185 },
               { x: 760, y: 185 },
               { x: 760, y: 416 },
@@ -574,8 +574,8 @@ export const DICO_TEMPLATES = [
             posa: 'Sottotraccia isolata',
             lengthMeters: 6.4,
             points: [
-              { x: 268, y: 175 },
-              { x: 448, y: 175 },
+              { x: 271, y: 175 },
+              { x: 451, y: 175 },
               { x: 745, y: 175 },
               { x: 745, y: 416 },
             ],
@@ -592,6 +592,7 @@ export const DICO_TEMPLATES = [
             posa: 'A pavimento',
             lengthMeters: 5.5,
             points: [
+              { x: 460, y: 164 },
               { x: 460, y: 240 },
               { x: 640, y: 240 },
               { x: 640, y: 440 },
@@ -603,7 +604,7 @@ export const DICO_TEMPLATES = [
 
       return {
         letters: ['d'],
-        intervention_type: 'rifacimento' === 'nuovo' ? 'nuovo' : 'manutenzione_straordinaria',
+        intervention_type: 'manutenzione_straordinaria',
         impianto_descrizione:
           'Rifacimento completo impianto idrico-sanitario adduzione acqua calda/fredda e scarichi bagno.',
         norms: 'UNI 9182:2014 (Impianti idrico-sanitari)\nUNI EN 806 (Acqua potabile)',

@@ -5,8 +5,8 @@ export const PIPE_TYPES = {
     id: 'frigo_mandata',
     label: 'Rame isolato — Liquido/Gas 1',
     short: 'Rame',
-    color: '#7f1d1d',
-    strokeWidth: 2.2,
+    color: '#b91c1c',
+    strokeWidth: 2,
     dash: '',
     defaultMaterial: 'Rame',
     defaultDescription: 'Tubo in Rame isolato UNI EN 12735-1 per condiz.',
@@ -18,8 +18,8 @@ export const PIPE_TYPES = {
     id: 'frigo_ritorno',
     label: 'Rame isolato — Aspirazione 2',
     short: 'Rame',
-    color: '#1e3a8a',
-    strokeWidth: 2.2,
+    color: '#3b82f6',
+    strokeWidth: 2,
     dash: '',
     defaultMaterial: 'Rame',
     defaultDescription: 'Tubo in Rame isolato UNI EN 12735-1 per condiz.',
@@ -31,7 +31,7 @@ export const PIPE_TYPES = {
     id: 'condensa',
     label: 'Scarico condensa (Gomma/PVC)',
     short: 'Gomma',
-    color: '#7e22ce',
+    color: '#9333ea',
     strokeWidth: 1.8,
     dash: '',
     defaultMaterial: 'Gomma',
@@ -44,8 +44,8 @@ export const PIPE_TYPES = {
     id: 'gas',
     label: 'Gas (metano / GPL)',
     short: 'Gas',
-    color: '#ca8a04',
-    strokeWidth: 2.5,
+    color: '#eab308',
+    strokeWidth: 2.3,
     dash: '',
     defaultMaterial: 'Rame',
     defaultDescription: 'Tubazione Gas UNI 7129',
@@ -57,8 +57,8 @@ export const PIPE_TYPES = {
     id: 'acqua_fredda',
     label: 'Acqua fredda sanitaria',
     short: 'Multistrato AF',
-    color: '#2563eb',
-    strokeWidth: 2.2,
+    color: '#38bdf8',
+    strokeWidth: 2.1,
     dash: '',
     defaultMaterial: 'Multistrato',
     defaultDescription: 'Tubazione acqua fredda PEX-Al-PEX',
@@ -70,8 +70,8 @@ export const PIPE_TYPES = {
     id: 'acqua_calda',
     label: 'Acqua calda sanitaria',
     short: 'Multistrato AC',
-    color: '#dc2626',
-    strokeWidth: 2.2,
+    color: '#f87171',
+    strokeWidth: 2.1,
     dash: '',
     defaultMaterial: 'Multistrato',
     defaultDescription: 'Tubazione acqua calda PEX-Al-PEX',
@@ -83,8 +83,8 @@ export const PIPE_TYPES = {
     id: 'mandata',
     label: 'Mandata riscaldamento',
     short: 'Mandata',
-    color: '#ea580c',
-    strokeWidth: 2.2,
+    color: '#fb923c',
+    strokeWidth: 2.1,
     dash: '',
     defaultMaterial: 'Multistrato',
     defaultDescription: 'Tubazione mandata riscaldamento',
@@ -96,8 +96,8 @@ export const PIPE_TYPES = {
     id: 'ritorno',
     label: 'Ritorno riscaldamento',
     short: 'Ritorno',
-    color: '#4338ca',
-    strokeWidth: 2.2,
+    color: '#818cf8',
+    strokeWidth: 2.1,
     dash: '6 3',
     defaultMaterial: 'Multistrato',
     defaultDescription: 'Tubazione ritorno riscaldamento',
@@ -109,8 +109,8 @@ export const PIPE_TYPES = {
     id: 'scarico',
     label: 'Scarico acque reflue',
     short: 'Scarico PP',
-    color: '#475569',
-    strokeWidth: 3,
+    color: '#64748b',
+    strokeWidth: 2.6,
     dash: '4 2',
     defaultMaterial: 'PP insonorizzato',
     defaultDescription: 'Tubazione scarico acque reflue',
@@ -181,10 +181,11 @@ export const CAD_SYMBOLS = {
     defaultPosa: 'A parete / pavimento',
     defaultNorm: 'Marcatura CE / UNI EN 378',
     ports: [
-      { x: -46, y: 2 },
-      { x: 46, y: 2 },
-      { x: 24, y: 18 },
-      { x: 10, y: 18 },
+      { x: -46, y: 2, label: 'Attacco SX' },
+      { x: 46, y: 2, label: 'Attacco DX' },
+      { x: -24, y: 18, label: 'Scarico condensa' },
+      { x: 10, y: 18, label: 'Linea 1' },
+      { x: 24, y: 18, label: 'Linea 2' },
     ],
   },
   unita_esterna: {
@@ -196,10 +197,11 @@ export const CAD_SYMBOLS = {
     defaultPosa: 'Su staffe / a pavimento',
     defaultNorm: 'Marcatura CE / F-Gas',
     ports: [
-      { x: -24, y: 0 },
-      { x: 24, y: 0 },
-      { x: -10, y: 42 },
-      { x: 10, y: 42 },
+      { x: -24, y: 10, label: 'Attacco SX' },
+      { x: 24, y: 10, label: 'Attacco DX' },
+      { x: -12, y: 42, label: 'Liquido 1' },
+      { x: 0, y: 42, label: 'Condensa' },
+      { x: 12, y: 42, label: 'Gas 2' },
     ],
   },
   pompa_condensa: {
@@ -211,8 +213,9 @@ export const CAD_SYMBOLS = {
     defaultPosa: 'A vista',
     defaultNorm: 'Marcatura CE',
     ports: [
-      { x: -16, y: 0 },
-      { x: 16, y: 0 },
+      { x: -14, y: 0, label: 'Ingresso condensa' },
+      { x: 14, y: 0, label: 'Uscita condensa' },
+      { x: 0, y: -14, label: 'Mandata alto' },
     ],
   },
   cassetta_soffitto: {
@@ -224,8 +227,9 @@ export const CAD_SYMBOLS = {
     defaultPosa: 'A controsoffitto',
     defaultNorm: 'Marcatura CE',
     ports: [
-      { x: -26, y: 0 },
-      { x: 26, y: 0 },
+      { x: -26, y: 0, label: 'Attacco SX' },
+      { x: 26, y: 0, label: 'Attacco DX' },
+      { x: 0, y: 26, label: 'Scarico condensa' },
     ],
   },
 
@@ -239,10 +243,11 @@ export const CAD_SYMBOLS = {
     defaultPosa: 'A parete',
     defaultNorm: 'Marcatura CE / ErP',
     ports: [
-      { x: -12, y: 28 },
-      { x: 0, y: 28 },
-      { x: 12, y: 28 },
-      { x: 0, y: -28 },
+      { x: -14, y: 28, label: 'Mandata' },
+      { x: -5, y: 28, label: 'Acqua calda' },
+      { x: 5, y: 28, label: 'Gas' },
+      { x: 14, y: 28, label: 'Ritorno / AF' },
+      { x: 0, y: -28, label: 'Scarico fumi' },
     ],
   },
   pompa_calore: {
@@ -254,8 +259,10 @@ export const CAD_SYMBOLS = {
     defaultPosa: 'Esterna su basamento',
     defaultNorm: 'Marcatura CE / UNI EN 378',
     ports: [
-      { x: -24, y: 18 },
-      { x: 24, y: 18 },
+      { x: -26, y: -8, label: 'Mandata SX' },
+      { x: -26, y: 8, label: 'Ritorno SX' },
+      { x: 26, y: -8, label: 'Mandata DX' },
+      { x: 26, y: 8, label: 'Ritorno DX' },
     ],
   },
   accumulo: {
@@ -267,9 +274,10 @@ export const CAD_SYMBOLS = {
     defaultPosa: 'A pavimento',
     defaultNorm: 'Marcatura CE',
     ports: [
-      { x: -16, y: -12 },
-      { x: -16, y: 12 },
-      { x: 16, y: 0 },
+      { x: -16, y: -12, label: 'Ingresso caldo' },
+      { x: -16, y: 12, label: 'Ritorno' },
+      { x: 16, y: -12, label: 'Uscita ACS' },
+      { x: 16, y: 12, label: 'Ingresso AF' },
     ],
   },
   collettore_termico: {
@@ -281,8 +289,13 @@ export const CAD_SYMBOLS = {
     defaultPosa: 'Incasso a muro',
     defaultNorm: 'UNI 10412',
     ports: [
-      { x: -28, y: 0 },
-      { x: 28, y: 0 },
+      { x: -28, y: -5, label: 'Mandata SX' },
+      { x: -28, y: 5, label: 'Ritorno SX' },
+      { x: 28, y: -5, label: 'Mandata DX' },
+      { x: 28, y: 5, label: 'Ritorno DX' },
+      { x: -14, y: 14, label: 'Circuito 1' },
+      { x: 0, y: 14, label: 'Circuito 2' },
+      { x: 14, y: 14, label: 'Circuito 3' },
     ],
   },
   radiatore: {
@@ -294,8 +307,10 @@ export const CAD_SYMBOLS = {
     defaultPosa: 'A parete',
     defaultNorm: 'UNI EN 442',
     ports: [
-      { x: -28, y: -8 },
-      { x: -28, y: 8 },
+      { x: -28, y: -7, label: 'Mandata SX' },
+      { x: -28, y: 7, label: 'Ritorno SX' },
+      { x: 28, y: -7, label: 'Mandata DX' },
+      { x: 28, y: 7, label: 'Ritorno DX' },
     ],
   },
   termoarredo: {
@@ -307,8 +322,8 @@ export const CAD_SYMBOLS = {
     defaultPosa: 'A parete',
     defaultNorm: 'UNI EN 442',
     ports: [
-      { x: -10, y: 24 },
-      { x: 10, y: 24 },
+      { x: -10, y: 24, label: 'Mandata' },
+      { x: 10, y: 24, label: 'Ritorno' },
     ],
   },
   scarico_fumi: {
@@ -319,7 +334,10 @@ export const CAD_SYMBOLS = {
     defaultDimension: 'Ø60/100',
     defaultPosa: 'A parete / tetto',
     defaultNorm: 'UNI 7129-3 / EN 14471',
-    ports: [{ x: 0, y: 14 }],
+    ports: [
+      { x: 0, y: 14, label: 'Attacco fumi' },
+      { x: 0, y: -14, label: 'Uscita fumi' },
+    ],
   },
   termostato: {
     id: 'termostato',
@@ -342,8 +360,8 @@ export const CAD_SYMBOLS = {
     defaultPosa: 'In nicchia esterna',
     defaultNorm: 'UNI 7129',
     ports: [
-      { x: -10, y: -18 },
-      { x: 10, y: -18 },
+      { x: -10, y: -14, label: 'Ingresso rete' },
+      { x: 10, y: -14, label: 'Uscita gas' },
     ],
   },
   valvola_gas: {
@@ -355,8 +373,8 @@ export const CAD_SYMBOLS = {
     defaultPosa: 'A vista / accessibile',
     defaultNorm: 'UNI EN 331',
     ports: [
-      { x: -16, y: 0 },
-      { x: 16, y: 0 },
+      { x: -15, y: 0, label: 'Ingresso' },
+      { x: 15, y: 0, label: 'Uscita' },
     ],
   },
   giunto_dielettrico: {
@@ -368,8 +386,8 @@ export const CAD_SYMBOLS = {
     defaultPosa: 'In linea',
     defaultNorm: 'UNI 10284',
     ports: [
-      { x: -16, y: 0 },
-      { x: 16, y: 0 },
+      { x: -16, y: 0, label: 'Lato 1' },
+      { x: 16, y: 0, label: 'Lato 2' },
     ],
   },
   piano_cottura: {
@@ -380,7 +398,7 @@ export const CAD_SYMBOLS = {
     defaultDimension: '4 fuochi',
     defaultPosa: 'Incasso top',
     defaultNorm: 'UNI 7129 / CE',
-    ports: [{ x: 0, y: 18 }],
+    ports: [{ x: 0, y: 16, label: 'Attacco gas' }],
   },
   foro_ventilazione: {
     id: 'foro_ventilazione',
@@ -403,8 +421,8 @@ export const CAD_SYMBOLS = {
     defaultPosa: 'In cassetta',
     defaultNorm: 'MID / UNI 9182',
     ports: [
-      { x: -18, y: 0 },
-      { x: 18, y: 0 },
+      { x: -18, y: 0, label: 'Ingresso' },
+      { x: 18, y: 0, label: 'Uscita' },
     ],
   },
   valvola_acqua: {
@@ -416,8 +434,8 @@ export const CAD_SYMBOLS = {
     defaultPosa: 'Incasso / a vista',
     defaultNorm: 'UNI EN 13828',
     ports: [
-      { x: -16, y: 0 },
-      { x: 16, y: 0 },
+      { x: -15, y: 0, label: 'Ingresso' },
+      { x: 15, y: 0, label: 'Uscita' },
     ],
   },
   collettore_sanitario: {
@@ -429,8 +447,13 @@ export const CAD_SYMBOLS = {
     defaultPosa: 'In cassetta incasso',
     defaultNorm: 'UNI 9182 / D.M. 174',
     ports: [
-      { x: -26, y: 0 },
-      { x: 26, y: 0 },
+      { x: -28, y: -5, label: 'AC SX' },
+      { x: -28, y: 5, label: 'AF SX' },
+      { x: 28, y: -5, label: 'AC DX' },
+      { x: 28, y: 5, label: 'AF DX' },
+      { x: -14, y: 14, label: 'Uscita 1' },
+      { x: 0, y: 14, label: 'Uscita 2' },
+      { x: 14, y: 14, label: 'Uscita 3' },
     ],
   },
   wc: {
@@ -441,8 +464,27 @@ export const CAD_SYMBOLS = {
     defaultDimension: 'Ø110',
     defaultPosa: 'A pavimento / sospeso',
     defaultNorm: 'UNI EN 997',
-    ports: [{ x: 0, y: -18 }],
+    ports: [
+      { x: -8, y: -18, label: 'Carico AF' },
+      { x: 0, y: 18, label: 'Scarico Ø110' },
+    ],
   },
+
+  bidet: {
+    id: 'bidet',
+    category: 'idrico',
+    label: 'Bidet',
+    defaultMaterial: 'Ceramica sanitaria',
+    defaultDimension: 'Ø40',
+    defaultPosa: 'A pavimento / sospeso',
+    defaultNorm: 'UNI 9182',
+    ports: [
+      { x: -9, y: -16, label: 'Acqua calda' },
+      { x: 9, y: -16, label: 'Acqua fredda' },
+      { x: 0, y: 16, label: 'Scarico Ø40' },
+    ],
+  },
+
   lavabo: {
     id: 'lavabo',
     category: 'idrico',
@@ -451,7 +493,11 @@ export const CAD_SYMBOLS = {
     defaultDimension: 'Ø40',
     defaultPosa: 'A parete / mobile',
     defaultNorm: 'UNI 9182',
-    ports: [{ x: 0, y: -14 }],
+    ports: [
+      { x: -9, y: 13, label: 'Acqua calda' },
+      { x: 0, y: 13, label: 'Scarico Ø40' },
+      { x: 9, y: 13, label: 'Acqua fredda' },
+    ],
   },
   doccia: {
     id: 'doccia',
@@ -461,7 +507,12 @@ export const CAD_SYMBOLS = {
     defaultDimension: 'Ø50',
     defaultPosa: 'A filo pavimento',
     defaultNorm: 'UNI 9182',
-    ports: [{ x: 0, y: -18 }],
+    ports: [
+      { x: -10, y: -20, label: 'Acqua calda' },
+      { x: 10, y: -20, label: 'Acqua fredda' },
+      { x: 0, y: 0, label: 'Scarico piletta' },
+      { x: -20, y: 0, label: 'Scarico SX' },
+    ],
   },
   lavatrice: {
     id: 'lavatrice',
@@ -471,10 +522,13 @@ export const CAD_SYMBOLS = {
     defaultDimension: '1/2" / Ø40',
     defaultPosa: 'Incasso a muro',
     defaultNorm: 'UNI 9182',
-    ports: [{ x: 0, y: -16 }],
+    ports: [
+      { x: -8, y: 16, label: 'Carico AF' },
+      { x: 8, y: 16, label: 'Scarico Ø40' },
+    ],
   },
 
-  /* --- EDILE / ARCHITETTONICO (esclusi dalla distinta materiali) --- */
+  /* --- EDILE / ARCHITETTONICO --- */
   finestra_prospetto: {
     id: 'finestra_prospetto',
     category: 'arch',
@@ -498,9 +552,34 @@ export const CAD_SYMBOLS = {
   },
 };
 
+/** Calcola le coordinate reali (sul foglio SVG) di tutte le porte di attacco di un simbolo. */
+export function getSymbolWorldPorts(el) {
+  const def = CAD_SYMBOLS[el?.symbolType];
+  if (!def || !Array.isArray(def.ports) || !def.ports.length) return [];
+  const sc = el.scale || 1;
+  const rad = ((el.rotation || 0) * Math.PI) / 180;
+  const cos = Math.cos(rad);
+  const sin = Math.sin(rad);
+
+  return def.ports.map((p, idx) => {
+    const sx = p.x * sc;
+    const sy = p.y * sc;
+    const rx = sx * cos - sy * sin;
+    const ry = sx * sin + sy * cos;
+    return {
+      id: `${el.id}-port-${idx}`,
+      symbolId: el.id,
+      symbolCode: el.code || def.label,
+      label: p.label || 'Attacco',
+      x: Math.round(el.x + rx),
+      y: Math.round(el.y + ry),
+    };
+  });
+}
+
 /**
- * Disegno vettoriale tecnico stile CAD blueprint (linea sottile nitida).
- * Se showPorts=true (in editing o stampa stile mrDico) mostra i pallini di attacco.
+ * Disegno vettoriale tecnico stile CAD blueprint (corpo bianco opaco così i tubi
+ * passano visivamente dietro al simbolo).
  */
 export function renderSymbolGlyph(symbolType, { showPorts = false } = {}) {
   const def = CAD_SYMBOLS[symbolType];
@@ -514,15 +593,13 @@ export function renderSymbolGlyph(symbolType, { showPorts = false } = {}) {
     case 'split_pavimento':
       glyph = (
         <g>
-          {/* Frecce mandata aria verso l'alto */}
           {[-30, -10, 10, 30].map((ax) => (
             <g key={ax} stroke={blue} strokeWidth="1" fill="none">
               <line x1={ax} y1="-22" x2={ax} y2="-36" />
               <polyline points={`${ax - 3.5},-31 ${ax},-36 ${ax + 3.5},-31`} />
             </g>
           ))}
-          {/* Scocca unità interna */}
-          <rect x="-46" y="-18" width="92" height="36" rx="5" fill="#ffffff" stroke={blue} strokeWidth="1.2" />
+          <rect x="-46" y="-18" width="92" height="36" rx="5" fill="#ffffff" stroke={blue} strokeWidth="1.3" />
           <line x1="-40" y1="-12" x2="40" y2="-12" stroke={blue} strokeWidth="0.8" />
           <line x1="-40" y1="12" x2="40" y2="12" stroke={blue} strokeWidth="0.8" strokeDasharray="3 2" />
         </g>
@@ -532,13 +609,11 @@ export function renderSymbolGlyph(symbolType, { showPorts = false } = {}) {
     case 'unita_esterna':
       glyph = (
         <g>
-          <rect x="-24" y="-42" width="48" height="84" rx="1.5" fill="#ffffff" stroke={blue} strokeWidth="1.2" />
+          <rect x="-24" y="-42" width="48" height="84" rx="1.5" fill="#ffffff" stroke={blue} strokeWidth="1.3" />
           <line x1="-24" y1="10" x2="24" y2="10" stroke={blue} strokeWidth="0.9" />
-          {/* Ventola stilizzata stile mrDico */}
           <ellipse cx="-9" cy="-16" rx="9" ry="4" fill="none" stroke={blue} strokeWidth="1.1" />
           <ellipse cx="9" cy="-16" rx="9" ry="4" fill="none" stroke={blue} strokeWidth="1.1" />
           <circle cx="0" cy="-16" r="2" fill={blue} />
-          {/* Sezione compressore inferiore */}
           <path d="M-12,26 Q-6,35 0,26 Q6,35 12,26" fill="none" stroke={blue} strokeWidth="1.1" />
           <line x1="-18" y1="36" x2="18" y2="36" stroke={blue} strokeWidth="0.9" />
         </g>
@@ -548,7 +623,7 @@ export function renderSymbolGlyph(symbolType, { showPorts = false } = {}) {
     case 'pompa_condensa':
       glyph = (
         <g>
-          <circle cx="0" cy="0" r="12" fill="#ffffff" stroke={blue} strokeWidth="1.2" />
+          <circle cx="0" cy="0" r="14" fill="#ffffff" stroke={blue} strokeWidth="1.3" />
           <polygon points="-5,-6 8,0 -5,6" fill="none" stroke={blue} strokeWidth="1.2" />
         </g>
       );
@@ -557,7 +632,7 @@ export function renderSymbolGlyph(symbolType, { showPorts = false } = {}) {
     case 'cassetta_soffitto':
       glyph = (
         <g>
-          <rect x="-26" y="-26" width="52" height="52" rx="2" fill="#ffffff" stroke={blue} strokeWidth="1.2" />
+          <rect x="-26" y="-26" width="52" height="52" rx="2" fill="#ffffff" stroke={blue} strokeWidth="1.3" />
           <rect x="-15" y="-15" width="30" height="30" fill="none" stroke={blue} strokeWidth="0.9" />
           <line x1="-22" y1="-22" x2="-15" y2="-15" stroke={blue} strokeWidth="0.9" />
           <line x1="22" y1="-22" x2="15" y2="-15" stroke={blue} strokeWidth="0.9" />
@@ -603,10 +678,10 @@ export function renderSymbolGlyph(symbolType, { showPorts = false } = {}) {
     case 'collettore_sanitario':
       glyph = (
         <g>
-          <rect x="-28" y="-14" width="56" height="28" rx="1.5" fill="#ffffff" stroke={blue} strokeWidth="1.2" />
+          <rect x="-28" y="-14" width="56" height="28" rx="1.5" fill="#ffffff" stroke={blue} strokeWidth="1.3" />
           <line x1="-22" y1="-5" x2="22" y2="-5" stroke="#dc2626" strokeWidth="2.2" />
           <line x1="-22" y1="5" x2="22" y2="5" stroke="#2563eb" strokeWidth="2.2" />
-          {[-14, -5, 5, 14].map((vx) => (
+          {[-14, 0, 14].map((vx) => (
             <line key={vx} x1={vx} y1="-5" x2={vx} y2="14" stroke={slate} strokeWidth="1" />
           ))}
         </g>
@@ -616,7 +691,7 @@ export function renderSymbolGlyph(symbolType, { showPorts = false } = {}) {
     case 'radiatore':
       glyph = (
         <g>
-          <rect x="-28" y="-11" width="56" height="22" rx="1.5" fill="#ffffff" stroke={blue} strokeWidth="1.2" />
+          <rect x="-28" y="-11" width="56" height="22" rx="1.5" fill="#ffffff" stroke={blue} strokeWidth="1.3" />
           {[-20, -12, -4, 4, 12, 20].map((rx) => (
             <line key={rx} x1={rx} y1="-11" x2={rx} y2="11" stroke={blue} strokeWidth="1" />
           ))}
@@ -627,7 +702,7 @@ export function renderSymbolGlyph(symbolType, { showPorts = false } = {}) {
     case 'termoarredo':
       glyph = (
         <g>
-          <rect x="-14" y="-24" width="28" height="48" rx="1.5" fill="#ffffff" stroke={blue} strokeWidth="1.2" />
+          <rect x="-14" y="-24" width="28" height="48" rx="1.5" fill="#ffffff" stroke={blue} strokeWidth="1.3" />
           {[-16, -8, 0, 8, 16].map((ry) => (
             <line key={ry} x1="-14" y1={ry} x2="14" y2={ry} stroke={blue} strokeWidth="1" />
           ))}
@@ -638,8 +713,8 @@ export function renderSymbolGlyph(symbolType, { showPorts = false } = {}) {
     case 'scarico_fumi':
       glyph = (
         <g>
-          <circle cx="0" cy="0" r="13" fill="#ffffff" stroke={slate} strokeWidth="1.3" />
-          <circle cx="0" cy="0" r="7.5" fill="none" stroke={slate} strokeWidth="1" strokeDasharray="3 2" />
+          <circle cx="0" cy="0" r="14" fill="#ffffff" stroke={slate} strokeWidth="1.3" />
+          <circle cx="0" cy="0" r="8" fill="none" stroke={slate} strokeWidth="1" strokeDasharray="3 2" />
           <line x1="-9" y1="-9" x2="9" y2="9" stroke={slate} strokeWidth="1" />
         </g>
       );
@@ -648,7 +723,7 @@ export function renderSymbolGlyph(symbolType, { showPorts = false } = {}) {
     case 'termostato':
       glyph = (
         <g>
-          <rect x="-13" y="-13" width="26" height="26" rx="2" fill="#ffffff" stroke={blue} strokeWidth="1.2" />
+          <rect x="-13" y="-13" width="26" height="26" rx="2" fill="#ffffff" stroke={blue} strokeWidth="1.3" />
           <text x="0" y="4" textAnchor="middle" fontSize="10" fontWeight="700" fill={blue}>TA</text>
         </g>
       );
@@ -658,7 +733,7 @@ export function renderSymbolGlyph(symbolType, { showPorts = false } = {}) {
     case 'contatore_acqua':
       glyph = (
         <g>
-          <rect x="-18" y="-14" width="36" height="28" rx="2" fill="#ffffff" stroke={blue} strokeWidth="1.2" />
+          <rect x="-18" y="-14" width="36" height="28" rx="2" fill="#ffffff" stroke={blue} strokeWidth="1.3" />
           <circle cx="0" cy="0" r="8" fill="none" stroke={blue} strokeWidth="1" />
           <text x="0" y="3.5" textAnchor="middle" fontSize="9" fontWeight="700" fill={blue}>
             {symbolType === 'contatore_gas' ? 'G4' : 'H2O'}
@@ -671,6 +746,7 @@ export function renderSymbolGlyph(symbolType, { showPorts = false } = {}) {
     case 'valvola_acqua':
       glyph = (
         <g>
+          <rect x="-15" y="-9" width="30" height="18" fill="#ffffff" stroke="none" />
           <polygon points="-15,-8 0,0 -15,8" fill="#ffffff" stroke={blue} strokeWidth="1.3" />
           <polygon points="15,-8 0,0 15,8" fill="#ffffff" stroke={blue} strokeWidth="1.3" />
           <line x1="0" y1="0" x2="0" y2="-13" stroke={blue} strokeWidth="1.3" />
@@ -682,6 +758,7 @@ export function renderSymbolGlyph(symbolType, { showPorts = false } = {}) {
     case 'giunto_dielettrico':
       glyph = (
         <g>
+          <rect x="-16" y="-9" width="32" height="18" fill="#ffffff" stroke="none" />
           <line x1="-16" y1="0" x2="-5" y2="0" stroke={blue} strokeWidth="1.8" />
           <line x1="5" y1="0" x2="16" y2="0" stroke={blue} strokeWidth="1.8" />
           <rect x="-5" y="-9" width="10" height="18" fill="#ffffff" stroke={blue} strokeWidth="1.3" />
@@ -693,7 +770,7 @@ export function renderSymbolGlyph(symbolType, { showPorts = false } = {}) {
     case 'piano_cottura':
       glyph = (
         <g>
-          <rect x="-24" y="-16" width="48" height="32" rx="2" fill="#ffffff" stroke={blue} strokeWidth="1.2" />
+          <rect x="-24" y="-16" width="48" height="32" rx="2" fill="#ffffff" stroke={blue} strokeWidth="1.3" />
           <circle cx="-11" cy="-6" r="5" fill="none" stroke={blue} strokeWidth="1.1" />
           <circle cx="11" cy="-6" r="4" fill="none" stroke={blue} strokeWidth="1.1" />
           <circle cx="-11" cy="7" r="4" fill="none" stroke={blue} strokeWidth="1.1" />
@@ -716,8 +793,29 @@ export function renderSymbolGlyph(symbolType, { showPorts = false } = {}) {
     case 'wc':
       glyph = (
         <g>
-          <rect x="-13" y="-18" width="26" height="9" rx="1" fill="#ffffff" stroke={blue} strokeWidth="1.2" />
-          <ellipse cx="0" cy="5" rx="11" ry="13" fill="#ffffff" stroke={blue} strokeWidth="1.2" />
+          <rect x="-13" y="-18" width="26" height="9" rx="1" fill="#ffffff" stroke={blue} strokeWidth="1.3" />
+          <ellipse cx="0" cy="5" rx="11" ry="13" fill="#ffffff" stroke={blue} strokeWidth="1.3" />
+        </g>
+      );
+      break;
+
+    case 'bidet':
+      glyph = (
+        <g>
+          {/* Corpo sanitario arrotondato */}
+          <path
+            d="M-12,-16 L12,-16 L12,2 A12,14 0 0,1 -12,2 Z"
+            fill="#ffffff"
+            stroke={blue}
+            strokeWidth="1.3"
+          />
+          {/* Vasca interna */}
+          <ellipse cx="0" cy="2" rx="8" ry="10" fill="none" stroke={blue} strokeWidth="0.9" />
+          {/* Miscelatore posteriore */}
+          <circle cx="0" cy="-11" r="2" fill={blue} />
+          <line x1="0" y1="-11" x2="0" y2="-6" stroke={blue} strokeWidth="1.3" />
+          {/* Piletta scarico */}
+          <circle cx="0" cy="4" r="2.2" fill="none" stroke={blue} strokeWidth="1" />
         </g>
       );
       break;
@@ -725,7 +823,7 @@ export function renderSymbolGlyph(symbolType, { showPorts = false } = {}) {
     case 'lavabo':
       glyph = (
         <g>
-          <rect x="-18" y="-13" width="36" height="26" rx="5" fill="#ffffff" stroke={blue} strokeWidth="1.2" />
+          <rect x="-18" y="-13" width="36" height="26" rx="5" fill="#ffffff" stroke={blue} strokeWidth="1.3" />
           <circle cx="0" cy="2" r="3" fill="none" stroke={blue} strokeWidth="1.1" />
         </g>
       );
@@ -734,7 +832,7 @@ export function renderSymbolGlyph(symbolType, { showPorts = false } = {}) {
     case 'doccia':
       glyph = (
         <g>
-          <rect x="-20" y="-20" width="40" height="40" fill="#ffffff" stroke={blue} strokeWidth="1.2" />
+          <rect x="-20" y="-20" width="40" height="40" fill="#ffffff" stroke={blue} strokeWidth="1.3" />
           <line x1="-20" y1="-20" x2="20" y2="20" stroke={blue} strokeWidth="0.7" opacity="0.6" />
           <line x1="20" y1="-20" x2="-20" y2="20" stroke={blue} strokeWidth="0.7" opacity="0.6" />
           <circle cx="0" cy="0" r="4" fill="#ffffff" stroke={blue} strokeWidth="1.1" />
@@ -745,25 +843,21 @@ export function renderSymbolGlyph(symbolType, { showPorts = false } = {}) {
     case 'lavatrice':
       glyph = (
         <g>
-          <rect x="-16" y="-16" width="32" height="32" fill="#ffffff" stroke={blue} strokeWidth="1.2" />
+          <rect x="-16" y="-16" width="32" height="32" fill="#ffffff" stroke={blue} strokeWidth="1.3" />
           <circle cx="0" cy="2" r="9" fill="none" stroke={blue} strokeWidth="1.1" />
           <line x1="-16" y1="-9" x2="16" y2="-9" stroke={blue} strokeWidth="0.9" />
         </g>
       );
       break;
 
-    /* --- ELEMENTI ARCHITETTONICI (stile sezione/pianta CAD) --- */
     case 'finestra_prospetto':
       glyph = (
         <g stroke={slate} strokeWidth="1.1" fill="#ffffff">
-          {/* Cassonetto tapparella */}
-          <rect x="-38" y="-68" width="76" height="16" />
-          {/* Telaio finestra */}
-          <rect x="-38" y="-44" width="76" height="96" />
-          <rect x="-32" y="-38" width="30" height="84" />
-          <rect x="2" y="-38" width="30" height="84" />
-          {/* Davanzale */}
-          <rect x="-44" y="52" width="88" height="8" />
+          <rect x="-36" y="-62" width="72" height="14" />
+          <rect x="-36" y="-42" width="72" height="88" />
+          <rect x="-30" y="-36" width="28" height="76" />
+          <rect x="2" y="-36" width="28" height="76" />
+          <rect x="-42" y="46" width="84" height="8" />
         </g>
       );
       break;
@@ -802,7 +896,7 @@ export function renderSymbolGlyph(symbolType, { showPorts = false } = {}) {
               key={idx}
               cx={p.x}
               cy={p.y}
-              r="3"
+              r="2.6"
               fill="#ffffff"
               stroke={portColor}
               strokeWidth="1"

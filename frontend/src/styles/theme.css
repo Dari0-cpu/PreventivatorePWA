@@ -2132,6 +2132,16 @@ a {
   }
 }
 
+.cad-zoom-group {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 2px;
+  border-radius: var(--r-sm);
+  background: var(--surf-2);
+  border: 1px solid var(--line);
+}
+
 /* ---------------- Stampa PDF ---------------- */
 @media print {
   .app-shell,
