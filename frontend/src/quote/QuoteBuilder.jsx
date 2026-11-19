@@ -11,6 +11,16 @@ import { TotalsBar } from './TotalsBar';
 import { Panel } from '../components/Panel';
 import { NotesView } from '../notes/NotesView';
 import { CalendarView } from '../calendar/CalendarView';
+import { DicoView } from '../dico/DicoView';
+import { DicoPrintPreview } from '../dico/DicoPrintPreview';
+import {
+  createEmptyDico,
+  computeNextDicoNumber,
+  getSavedDicos,
+  saveDicoToArchive,
+  deleteDicoFromArchive,
+} from '../dico/dicoModel';
+
 import {
   saveLastQuoteNumber,
   getSavedQuotes,
@@ -68,6 +78,13 @@ const IconCalendar = () => (
     <line x1="16" y1="2" x2="16" y2="6" />
     <line x1="8" y1="2" x2="8" y2="6" />
     <line x1="3" y1="10" x2="21" y2="10" />
+  </svg>
+);
+
+const IconShield = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+    <polyline points="9 12 11 14 15 10" />
   </svg>
 );
 
@@ -150,6 +167,9 @@ export default function QuoteBuilder() {
   const [notes, setNotes] = useState([]);
   const [calendarEvents, setCalendarEvents] = useState([]);
 
+  const [dicos, setDicos] = useState([]);
+  const [activeDico, setActiveDico] = useState(() => createEmptyDico('1'));
+
   const [archiveQuery, setArchiveQuery] = useState('');
   const [saveNotice, setSaveNotice] = useState('');
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
@@ -170,6 +190,15 @@ export default function QuoteBuilder() {
     getSavedQuotes().then(setArchivedQuotes);
     getSavedNotes().then(setNotes);
     getCalendarEvents().then(setCalendarEvents);
+
+    getSavedDicos().then((list) => {
+      setDicos(list);
+      setActiveDico((prev) =>
+        prev.client?.name || prev.impianto_descrizione
+          ? prev
+          : createEmptyDico(computeNextDicoNumber(list)),
+      );
+    });
 
     if (!quote.quote_number) {
       fetchNextQuoteNumber().then((nextNum) => setField('quote_number', nextNum));
@@ -422,6 +451,54 @@ export default function QuoteBuilder() {
     setCalendarEvents(updatedList);
   };
 
+  /* --- Azioni modulo DiCo 37/08 --- */
+  const handleSaveDico = async (dicoData) => {
+    const updatedList = await saveDicoToArchive(dicoData);
+    setDicos(updatedList);
+  };
+
+  const handleDeleteDico = async (dicoId) => {
+    if (!window.confirm('Eliminare definitivamente questa Dichiarazione di Conformità?')) return;
+    const updatedList = await deleteDicoFromArchive(dicoId);
+    setDicos(updatedList);
+    if (activeDico.id === dicoId) {
+      setActiveDico(updatedList[0] || createEmptyDico(computeNextDicoNumber(updatedList)));
+    }
+  };
+
+  const handleNewDico = () => {
+    setActiveDico(createEmptyDico(computeNextDicoNumber(dicos)));
+  };
+
+  const handleCreateDicoFromQuote = (sourceQuote) => {
+    const fresh = createEmptyDico(computeNextDicoNumber(dicos));
+    setActiveDico({
+      ...fresh,
+      client: { ...fresh.client, ...(sourceQuote.client || {}) },
+      location: {
+        ...fresh.location,
+        address: sourceQuote.client?.address || '',
+        cap: sourceQuote.client?.cap || '',
+        city: sourceQuote.client?.city || '',
+        province: sourceQuote.client?.province || 'RM',
+      },
+      impianto_descrizione: sourceQuote.object_title || '',
+    });
+    setActiveView('dico');
+    setSidebarOpen(false);
+  };
+
+  const handlePrintDico = () => {
+    const previousTitle = document.title;
+    const num = (activeDico.dico_number || 'bozza').trim();
+    const client = (activeDico.client?.name || 'Cliente').trim().replace(/\s+/g, '_');
+    document.title = `DiCo_${num}_${client}`;
+    window.setTimeout(() => {
+      window.print();
+      document.title = previousTitle;
+    }, 80);
+  };
+
   const switchView = (view) => {
     setActiveView(view);
     setSidebarOpen(false);
@@ -446,6 +523,12 @@ export default function QuoteBuilder() {
         todayEventsCount > 0
           ? `${todayEventsCount} ${todayEventsCount === 1 ? 'impegno' : 'impegni'} in programma oggi`
           : 'Nessun impegno pendente per oggi',
+    },
+    dico: {
+      title: activeDico.dico_number
+        ? `DiCo 37/08 N° ${activeDico.dico_number}`
+        : 'Dichiarazione di Conformità',
+      sub: activeDico.client?.name?.trim() || 'Allegato I, Disegno CAD, Materiali e Foto',
     },
   }[activeView];
 
@@ -520,6 +603,16 @@ export default function QuoteBuilder() {
               {todayEventsCount > 0 ? (
                 <span className="nav-badge nav-badge-accent">{todayEventsCount}</span>
               ) : null}
+            </button>
+
+            <button
+              type="button"
+              className={`nav-item ${activeView === 'dico' ? 'is-active' : ''}`}
+              onClick={() => switchView('dico')}
+            >
+              <IconShield />
+              <span>DiCo 37/08</span>
+              <span className="nav-badge">{dicos.length}</span>
             </button>
           </nav>
 
@@ -621,6 +714,21 @@ export default function QuoteBuilder() {
                   Vai a oggi
                 </button>
               ) : null}
+
+              {activeView === 'dico' ? (
+              <DicoView
+                dicos={dicos}
+                activeDico={activeDico}
+                onChangeDico={setActiveDico}
+                onSelectDico={setActiveDico}
+                onNewDico={handleNewDico}
+                onSaveDico={handleSaveDico}
+                onDeleteDico={handleDeleteDico}
+                onPrintDico={handlePrintDico}
+                clients={clients}
+                issuer={quote.issuer}
+              />
+            ) : null}
             </div>
           </header>
 
@@ -782,6 +890,14 @@ export default function QuoteBuilder() {
                               >
                                 ✕
                               </button>
+                              <button
+                                type="button"
+                                className="btn btn-ghost btn-sm"
+                                onClick={() => handleCreateDicoFromQuote(item)}
+                                title="Crea Dichiarazione di Conformità precompilata"
+                              >
+                                DiCo
+                              </button>
                             </div>
                           </div>
                         );
@@ -851,7 +967,11 @@ export default function QuoteBuilder() {
 
       {/* AREA DEDICATA ALLA STAMPA DI SISTEMA */}
       <div className="print-area">
-        <QuotePreview quote={quote} />
+        {activeView === 'dico' ? (
+          <DicoPrintPreview dico={activeDico} issuer={quote.issuer} />
+        ) : (
+          <QuotePreview quote={quote} />
+        )}
       </div>
     </>
   );

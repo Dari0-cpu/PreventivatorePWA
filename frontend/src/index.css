@@ -299,6 +299,205 @@ body {
   color: #64748b;
 }
 
+/* ==========================================================================
+   UPGRADE FASCICOLO DICO STILE MRDICO (COPERTINA, LEGENDA, QUADRI, LIBRETTO)
+   ========================================================================== */
+.dico-page {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-height: 262mm;
+}
+
+.dico-page-footer {
+  margin-top: auto;
+  padding-top: 8px;
+  border-top: 1px solid #cbd5e1;
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  font-size: 7.4pt;
+  color: #64748b;
+}
+
+/* Copertina */
+.dico-cover-topbar {
+  display: flex;
+  justify-content: space-between;
+  font-size: 8.5pt;
+  color: #475569;
+  padding-bottom: 8px;
+  border-bottom: 1.5px solid #0f172a;
+}
+
+.dico-cover-logo-area {
+  display: flex;
+  justify-content: center;
+  padding: 22px 0 14px;
+}
+
+.dico-cover-logo {
+  max-height: 92px;
+  max-width: 240px;
+  object-fit: contain;
+}
+
+.dico-cover-box {
+  border: 1.5px solid #0f172a;
+  border-radius: 6px;
+  padding: 18px 20px;
+  background: #ffffff;
+}
+
+.dico-cover-title {
+  text-align: center;
+  font-size: 16pt;
+  font-weight: 800;
+  line-height: 1.25;
+  color: #0f172a;
+}
+
+.dico-cover-law {
+  text-align: center;
+  font-size: 9pt;
+  color: #475569;
+  margin-top: 5px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid #cbd5e1;
+}
+
+.dico-cover-section {
+  padding: 11px 0;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.dico-cover-section:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.dico-cover-label {
+  font-size: 8pt;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #64748b;
+  margin-bottom: 4px;
+}
+
+.dico-cover-value-lg {
+  font-size: 13pt;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.dico-cover-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 5px 14px;
+  font-size: 9pt;
+}
+
+.dico-cover-row {
+  font-size: 9pt;
+  margin-top: 4px;
+}
+
+.dico-cover-company-card {
+  margin-top: 24px;
+  padding: 12px 16px;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  background: #f8fafc;
+  font-size: 8.8pt;
+  line-height: 1.5;
+}
+
+.dico-cover-company-name {
+  font-size: 10.5pt;
+  font-weight: 800;
+  color: #14532d;
+  margin-bottom: 2px;
+}
+
+/* 4 colonne firme + avvertenze art. 8 */
+.dico-signatures-4 {
+  display: grid;
+  grid-template-columns: 0.75fr 1fr 1fr 1fr;
+  gap: 12px;
+  margin-top: 18px;
+  align-items: end;
+}
+
+.dico-art8-box {
+  margin-top: 14px;
+  padding: 7px 9px;
+  border: 1px solid #94a3b8;
+  background: #f8fafc;
+  font-size: 7.4pt;
+  line-height: 1.35;
+  color: #334155;
+}
+
+/* Legenda Pagina 2 */
+.dico-legenda-list {
+  margin: 8px 0;
+  padding-left: 18px;
+  font-size: 8.2pt;
+  line-height: 1.5;
+  color: #1e293b;
+}
+
+.dico-legenda-list li {
+  margin-bottom: 7px;
+}
+
+/* Quadri Sez. I e II */
+.dico-quadro-title {
+  font-size: 9.2pt;
+  font-weight: 800;
+  text-transform: uppercase;
+  color: #14532d;
+  margin: 12px 0 5px;
+}
+
+.dico-quadro-box {
+  border: 1px solid #94a3b8;
+  padding: 10px 12px;
+  font-size: 8.4pt;
+}
+
+.dico-quadro-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 5px 14px;
+}
+
+.dico-scenario-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+
+/* Libretto uso e manutenzione */
+.dico-lib-p {
+  font-size: 8.5pt;
+  line-height: 1.55;
+  color: #1e293b;
+  margin: 4px 0 10px;
+}
+
+.dico-lib-list {
+  margin: 4px 0;
+  padding-left: 18px;
+  font-size: 8.4pt;
+  line-height: 1.55;
+  color: #1e293b;
+}
+
+.dico-lib-list li {
+  margin-bottom: 5px;
+}
+
 @media print {
   @page {
     size: A4 portrait;
@@ -318,5 +517,318 @@ body {
     padding: 6px 0 2px 0;
     background: #ffffff;
     border-top: 1px solid #cbd5e1;
+  }
+}
+
+/* ==========================================================================
+   STILE DOCUMENTO MINISTERIALE DICO D.M. 37/08 (ANTEPRIMA E STAMPA A4)
+   ========================================================================== */
+.dico-doc,
+.dico-doc * {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif !important;
+  box-sizing: border-box;
+  -webkit-print-color-adjust: exact !important;
+  print-color-adjust: exact !important;
+}
+
+.dico-page {
+  background: #ffffff;
+  color: #111827;
+  padding: 12mm 14mm;
+  font-size: 9pt;
+  line-height: 1.42;
+}
+
+.dico-page + .dico-page {
+  margin-top: 16px;
+  border-top: 2px dashed #cbd5e1;
+}
+
+.dico-min-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 14px;
+  padding-bottom: 10px;
+  border-bottom: 2px solid #0f172a;
+  margin-bottom: 10px;
+}
+
+.dico-min-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.dico-min-logo {
+  width: 56px;
+  height: auto;
+  max-height: 56px;
+  object-fit: contain;
+}
+
+.dico-min-company {
+  font-size: 12pt;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.dico-min-sub {
+  font-size: 7.8pt;
+  color: #475569;
+}
+
+.dico-min-badge {
+  text-align: right;
+  font-size: 8.5pt;
+  color: #334155;
+}
+
+.dico-min-badge strong {
+  display: block;
+  font-size: 10.5pt;
+  color: #0f172a;
+}
+
+.dico-legal-title {
+  text-align: center;
+  font-size: 11.5pt;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  margin: 6px 0 2px;
+  color: #0f172a;
+}
+
+.dico-legal-sub {
+  text-align: center;
+  font-size: 8pt;
+  color: #475569;
+  margin: 0 0 10px;
+}
+
+.dico-legal-body p {
+  margin: 6px 0;
+}
+
+.dico-section-h {
+  text-align: center;
+  font-size: 9.8pt;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  margin: 10px 0 5px;
+  padding: 2px 0;
+  background: #f1f5f9;
+  border-top: 1px solid #cbd5e1;
+  border-bottom: 1px solid #cbd5e1;
+}
+
+.dico-check-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+  margin: 6px 0;
+}
+
+.dico-check-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 8.4pt;
+}
+
+.dico-check-box {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 12px;
+  height: 12px;
+  border: 1px solid #0f172a;
+  font-size: 8.5pt;
+  font-weight: 800;
+  line-height: 1;
+  flex: none;
+}
+
+.dico-check-box.is-checked {
+  background: #e2e8f0;
+}
+
+.dico-letters-box {
+  margin: 8px 0;
+  padding: 6px 9px;
+  border: 1px solid #cbd5e1;
+  background: #f8fafc;
+}
+
+.dico-letters-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 3px 10px;
+  margin-top: 4px;
+}
+
+.dico-decl-list {
+  list-style: none;
+  padding: 0;
+  margin: 6px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.dico-decl-list li {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+}
+
+.dico-att-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px 12px;
+  margin-top: 4px;
+}
+
+.dico-signatures {
+  display: grid;
+  grid-template-columns: 0.9fr 1fr 1fr;
+  gap: 18px;
+  margin-top: 20px;
+  align-items: end;
+}
+
+.dico-sign-box {
+  text-align: center;
+  font-size: 8.5pt;
+  font-weight: 600;
+}
+
+.dico-sign-line {
+  margin-top: 26px;
+  padding-top: 4px;
+  border-top: 1px solid #334155;
+  font-size: 7.5pt;
+  font-weight: 400;
+  color: #64748b;
+}
+
+/* Tavola CAD & Cartiglio */
+.dico-sub-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  padding-bottom: 6px;
+  margin-bottom: 10px;
+  border-bottom: 1.5px solid #0f172a;
+}
+
+.dico-cad-print-box {
+  border: 1.5px solid #0f172a;
+  background: #ffffff;
+}
+
+.dico-plate-bottom {
+  display: grid;
+  grid-template-columns: 1.35fr 1fr;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.dico-legend-box,
+.dico-cartiglio {
+  border: 1px solid #334155;
+  padding: 8px 10px;
+  font-size: 7.8pt;
+}
+
+.dico-plate-label {
+  font-size: 7.5pt;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  color: #14532d;
+  border-bottom: 1px solid #cbd5e1;
+  padding-bottom: 3px;
+  margin-bottom: 6px;
+}
+
+.dico-legend-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px 8px;
+}
+
+.dico-legend-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.dico-cartiglio-sign {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 14px;
+  padding-top: 6px;
+  border-top: 1px dashed #94a3b8;
+  color: #475569;
+}
+
+/* Tabella Materiali */
+.dico-mat-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 8pt;
+}
+
+.dico-mat-table th,
+.dico-mat-table td {
+  border: 1px solid #94a3b8;
+  padding: 5px 6px;
+  text-align: left;
+  vertical-align: top;
+}
+
+.dico-mat-table th {
+  background: #f1f5f9;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+/* Foto 2x2 */
+.dico-photos-print-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.dico-photo-figure {
+  margin: 0;
+  border: 1px solid #cbd5e1;
+  padding: 6px;
+  break-inside: avoid;
+}
+
+.dico-photo-figure img {
+  width: 100%;
+  height: 175px;
+  object-fit: cover;
+  display: block;
+}
+
+.dico-photo-figure figcaption {
+  margin-top: 5px;
+  font-size: 8pt;
+  color: #334155;
+}
+
+@media print {
+  .dico-page {
+    padding: 0 !important;
+    margin: 0 !important;
+    border: none !important;
+  }
+  .dico-page-break {
+    page-break-before: always;
+    break-before: page;
   }
 }
