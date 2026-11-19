@@ -76,6 +76,10 @@ export function useQuote() {
     setClients(saveClientToDirectory(quote.client));
   }, [quote.client]);
 
+  const saveClient = useCallback((clientData) => {
+    setClients(saveClientToDirectory(clientData));
+  }, []);
+
   const forgetClient = useCallback((name) => {
     setClients(removeClientFromDirectory(name));
   }, []);
@@ -191,6 +195,7 @@ export function useQuote() {
     setIssuerField,
     applyClient,
     rememberClient,
+    saveClient,
     forgetClient,
     appendText,
     addSection,

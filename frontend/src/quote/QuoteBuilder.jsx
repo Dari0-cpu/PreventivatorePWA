@@ -9,6 +9,8 @@ import { TermsPanel } from './TermsPanel';
 import { QuotePreview } from './QuotePreview';
 import { TotalsBar } from './TotalsBar';
 import { Panel } from '../components/Panel';
+import { NotesView } from '../notes/NotesView';
+import { CalendarView } from '../calendar/CalendarView';
 import {
   saveLastQuoteNumber,
   getSavedQuotes,
@@ -17,11 +19,25 @@ import {
   exportQuoteToFile,
   fetchNextQuoteNumber,
   makeId,
+  createEmptySection,
+  formatClientAddress,
 } from './quoteModel';
+import {
+  getSavedNotes,
+  saveNoteToArchive,
+  deleteNoteFromArchive,
+  noteBodyToQuoteHtml,
+} from '../notes/noteModel';
+import {
+  getCalendarEvents,
+  saveCalendarEvent,
+  toggleCalendarEventDone,
+  deleteCalendarEvent,
+} from '../calendar/calendarModel';
 import { todayIso, formatDate, formatCurrency } from '../lib/format';
 import { computeQuoteTotals } from '../lib/totals';
 
-/* Icone SVG minimali (niente emoji, zero dipendenze esterne) */
+/* Icone SVG minimali */
 const IconFile = () => (
   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
@@ -36,6 +52,22 @@ const IconArchive = () => (
     <polyline points="21 8 21 21 3 21 3 8" />
     <rect x="1" y="3" width="22" height="5" />
     <line x1="10" y1="12" x2="14" y2="12" />
+  </svg>
+);
+
+const IconNotes = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M12 20h9" />
+    <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" />
+  </svg>
+);
+
+const IconCalendar = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+    <line x1="16" y1="2" x2="16" y2="6" />
+    <line x1="8" y1="2" x2="8" y2="6" />
+    <line x1="3" y1="10" x2="21" y2="10" />
   </svg>
 );
 
@@ -96,6 +128,7 @@ export default function QuoteBuilder() {
     setIssuerField,
     applyClient,
     rememberClient,
+    saveClient,
     appendText,
     addSection,
     updateSection,
@@ -108,14 +141,22 @@ export default function QuoteBuilder() {
     startNewQuote,
   } = useQuote();
 
-  // Di base apre sempre su Preventivo nuovo / editor corrente
+  // Di base apre sempre su Preventivo nuovo ('editor')
   const [activeView, setActiveView] = useState('editor');
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [mobilePreview, setMobilePreview] = useState(false);
+
   const [archivedQuotes, setArchivedQuotes] = useState([]);
+  const [notes, setNotes] = useState([]);
+  const [calendarEvents, setCalendarEvents] = useState([]);
+
   const [archiveQuery, setArchiveQuery] = useState('');
   const [saveNotice, setSaveNotice] = useState('');
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
+  const [newNoteTrigger, setNewNoteTrigger] = useState(0);
+  const [jumpTodayTrigger, setJumpTodayTrigger] = useState(0);
+  const [calendarPrefill, setCalendarPrefill] = useState(null);
+
   const fileInputRef = useRef(null);
 
   const getPdfFileName = () => {
@@ -126,14 +167,20 @@ export default function QuoteBuilder() {
   };
 
   useEffect(() => {
-    getSavedQuotes().then((list) => {
-      setArchivedQuotes(list);
-    });
+    getSavedQuotes().then(setArchivedQuotes);
+    getSavedNotes().then(setNotes);
+    getCalendarEvents().then(setCalendarEvents);
+
     if (!quote.quote_number) {
       fetchNextQuoteNumber().then((nextNum) => setField('quote_number', nextNum));
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  const todayEventsCount = useMemo(() => {
+    const today = todayIso();
+    return calendarEvents.filter((ev) => ev.date === today && !ev.done).length;
+  }, [calendarEvents]);
 
   const filteredArchive = useMemo(() => {
     const q = archiveQuery.trim().toLowerCase();
@@ -288,7 +335,9 @@ export default function QuoteBuilder() {
     const hasContent = quote.client.name.trim() || quote.object_title.trim();
     if (
       hasContent &&
-      !window.confirm('Iniziare un nuovo preventivo? (Salva prima se non vuoi perdere la bozza attuale).')
+      !window.confirm(
+        'Iniziare un nuovo preventivo? (Salva prima se non vuoi perdere la bozza attuale).',
+      )
     ) {
       return;
     }
@@ -300,10 +349,105 @@ export default function QuoteBuilder() {
     setSidebarOpen(false);
   };
 
+  /* --- Azioni modulo Note --- */
+  const handleSaveNote = async (noteData) => {
+    const updatedList = await saveNoteToArchive(noteData);
+    setNotes(updatedList);
+    return updatedList.find((item) => item.id === noteData.id) || noteData;
+  };
+
+  const handleDeleteNote = async (noteId) => {
+    const updatedList = await deleteNoteFromArchive(noteId);
+    setNotes(updatedList);
+  };
+
+  /* --- Collegamento Nota -> Preventivo --- */
+  const handleCreateQuoteFromNote = async (note) => {
+    const hasDraftContent = quote.client.name.trim() || quote.object_title.trim();
+    if (
+      hasDraftContent &&
+      !window.confirm(
+        'Creare un nuovo preventivo da questa nota? La bozza corrente nell’editor verrà sostituita.',
+      )
+    ) {
+      return;
+    }
+
+    const nextNum = await fetchNextQuoteNumber();
+    startNewQuote();
+    setField('quote_number', nextNum);
+    if (note.client) {
+      applyClient(note.client);
+    }
+    if (note.title?.trim()) {
+      setField('object_title', note.title.trim());
+    }
+    if (note.body?.trim()) {
+      const firstSection = {
+        ...createEmptySection(note.title?.trim() || 'Preventivo di spesa'),
+        body: noteBodyToQuoteHtml(note.body),
+      };
+      setField('sections', [firstSection]);
+    }
+    setActiveView('editor');
+    setSidebarOpen(false);
+  };
+
+  /* --- Collegamento Nota -> Calendario --- */
+  const handleScheduleFromNote = (note) => {
+    setCalendarPrefill({
+      client_name: note.client?.name || '',
+      address: formatClientAddress(note.client) || '',
+      phone: note.client?.phone || '',
+      title: note.title?.trim() || 'Sopralluogo',
+      notes: '',
+    });
+    setActiveView('calendar');
+    setSidebarOpen(false);
+  };
+
+  /* --- Azioni modulo Calendario --- */
+  const handleSaveEvent = async (eventData) => {
+    const updatedList = await saveCalendarEvent(eventData);
+    setCalendarEvents(updatedList);
+  };
+
+  const handleToggleEventDone = async (eventItem, done) => {
+    const updatedList = await toggleCalendarEventDone(eventItem, done);
+    setCalendarEvents(updatedList);
+  };
+
+  const handleDeleteEvent = async (eventId) => {
+    const updatedList = await deleteCalendarEvent(eventId);
+    setCalendarEvents(updatedList);
+  };
+
   const switchView = (view) => {
     setActiveView(view);
     setSidebarOpen(false);
   };
+
+  const topbarMeta = {
+    editor: {
+      title: quote.quote_number ? `Preventivo N° ${quote.quote_number}` : 'Preventivo nuovo',
+      sub: quote.client?.name?.trim() || 'Compila i campi per generare il documento',
+    },
+    archive: {
+      title: 'Archivio preventivi',
+      sub: `${archivedQuotes.length} ${archivedQuotes.length === 1 ? 'preventivo salvato' : 'preventivi salvati'}`,
+    },
+    notes: {
+      title: 'Note di lavoro',
+      sub: `${notes.length} ${notes.length === 1 ? 'nota salvata' : 'note salvate'} · Sopralluoghi e dettatura vocale`,
+    },
+    calendar: {
+      title: 'Calendario appuntamenti',
+      sub:
+        todayEventsCount > 0
+          ? `${todayEventsCount} ${todayEventsCount === 1 ? 'impegno' : 'impegni'} in programma oggi`
+          : 'Nessun impegno pendente per oggi',
+    },
+  }[activeView];
 
   return (
     <>
@@ -355,6 +499,28 @@ export default function QuoteBuilder() {
               <span>Archivio</span>
               <span className="nav-badge">{archivedQuotes.length}</span>
             </button>
+
+            <button
+              type="button"
+              className={`nav-item ${activeView === 'notes' ? 'is-active' : ''}`}
+              onClick={() => switchView('notes')}
+            >
+              <IconNotes />
+              <span>Note</span>
+              <span className="nav-badge">{notes.length}</span>
+            </button>
+
+            <button
+              type="button"
+              className={`nav-item ${activeView === 'calendar' ? 'is-active' : ''}`}
+              onClick={() => switchView('calendar')}
+            >
+              <IconCalendar />
+              <span>Calendario</span>
+              {todayEventsCount > 0 ? (
+                <span className="nav-badge nav-badge-accent">{todayEventsCount}</span>
+              ) : null}
+            </button>
           </nav>
 
           <div className="sidebar-footer">
@@ -377,21 +543,13 @@ export default function QuoteBuilder() {
               </button>
 
               <div style={{ minWidth: 0 }}>
-                <div className="topbar-title">
-                  {activeView === 'editor'
-                    ? quote.quote_number
-                      ? `Preventivo N° ${quote.quote_number}`
-                      : 'Preventivo nuovo'
-                    : 'Archivio preventivi'}
-                </div>
-                <div className="topbar-sub">
-                  {activeView === 'editor'
-                    ? quote.client?.name?.trim() || 'Compila i campi per generare il documento'
-                    : `${archivedQuotes.length} ${archivedQuotes.length === 1 ? 'preventivo salvato' : 'preventivi salvati'}`}
-                </div>
+                <div className="topbar-title">{topbarMeta.title}</div>
+                <div className="topbar-sub">{topbarMeta.sub}</div>
               </div>
 
-              {saveNotice ? <span className="status-pill">{saveNotice}</span> : null}
+              {saveNotice && activeView === 'editor' ? (
+                <span className="status-pill">{saveNotice}</span>
+              ) : null}
             </div>
 
             <div className="topbar-actions">
@@ -415,7 +573,9 @@ export default function QuoteBuilder() {
                     Stampa
                   </button>
                 </>
-              ) : (
+              ) : null}
+
+              {activeView === 'archive' ? (
                 <>
                   <input
                     ref={fileInputRef}
@@ -439,7 +599,28 @@ export default function QuoteBuilder() {
                     Esporta bozza .json
                   </button>
                 </>
-              )}
+              ) : null}
+
+              {activeView === 'notes' ? (
+                <button
+                  type="button"
+                  className="btn btn-primary btn-sm"
+                  onClick={() => setNewNoteTrigger((n) => n + 1)}
+                >
+                  <IconPlus />
+                  Nuova nota
+                </button>
+              ) : null}
+
+              {activeView === 'calendar' ? (
+                <button
+                  type="button"
+                  className="btn btn-ghost btn-sm"
+                  onClick={() => setJumpTodayTrigger((n) => n + 1)}
+                >
+                  Vai a oggi
+                </button>
+              ) : null}
             </div>
           </header>
 
@@ -513,8 +694,9 @@ export default function QuoteBuilder() {
                   </div>
                 </div>
               </div>
-            ) : (
-              /* VISTA ARCHIVIO */
+            ) : null}
+
+            {activeView === 'archive' ? (
               <div>
                 <div className="archive-toolbar">
                   <div className="archive-search">
@@ -608,7 +790,33 @@ export default function QuoteBuilder() {
                   )}
                 </div>
               </div>
-            )}
+            ) : null}
+
+            {activeView === 'notes' ? (
+              <NotesView
+                notes={notes}
+                clients={clients}
+                onSaveNote={handleSaveNote}
+                onDeleteNote={handleDeleteNote}
+                onSaveClientToDirectory={saveClient}
+                onCreateQuoteFromNote={handleCreateQuoteFromNote}
+                onScheduleFromNote={handleScheduleFromNote}
+                newNoteTrigger={newNoteTrigger}
+              />
+            ) : null}
+
+            {activeView === 'calendar' ? (
+              <CalendarView
+                events={calendarEvents}
+                clients={clients}
+                onSaveEvent={handleSaveEvent}
+                onToggleDone={handleToggleEventDone}
+                onDeleteEvent={handleDeleteEvent}
+                prefill={calendarPrefill}
+                onClearPrefill={() => setCalendarPrefill(null)}
+                jumpTodayTrigger={jumpTodayTrigger}
+              />
+            ) : null}
           </main>
 
           {activeView === 'editor' ? (
