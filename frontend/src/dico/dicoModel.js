@@ -4,7 +4,7 @@ import { createEmptyClient, makeId } from '../quote/quoteModel';
 import { CAD_SYMBOLS, PIPE_TYPES } from './cad/symbols';
 
 const DICO_STORAGE_KEY = 'crima_dico_archive';
-const DICO_RT_KEY = 'crima_dico_rt_defaults';
+const DICO_RT_KEY = 'crima_dico_rt_defaults_v2';
 
 export const DM37_LETTERS = [
   { code: 'c', label: 'c) Riscaldamento, climatizzazione, condizionamento e refrigerazione' },
